@@ -864,11 +864,10 @@
   color: var(--ink);
 }
 
-/* ── Media Queries ──────────────────────────────────────────────── */
 @media (max-width: 48rem) {
   .pin-wrapper {
-    width: 2.2rem !important;
-    max-width: 2.2rem !important;
+    width: 4.5rem !important; /* Increased from 2.2rem */
+    max-width: 4.5rem !important;
     min-width: 0 !important;
   }
 
@@ -878,34 +877,34 @@
   }
 
   .polaroid-frame {
-    padding: 0.12rem 0.12rem 0.2rem !important;
+    padding: 0.2rem 0.2rem 0.3rem !important;
   }
 
   .handwritten-name {
-    font-size: 0.42rem !important;
+    font-size: 0.65rem !important; /* Scaled up for readability */
     line-height: 1 !important;
   }
 
   .role-sub {
-    font-size: 0.3rem !important;
+    font-size: 0.45rem !important;
     margin-top: 0.02rem !important;
   }
 
   .evidence-tag {
-    font-size: 0.28rem !important;
-    padding: 0.05rem 0.1rem !important;
+    font-size: 0.4rem !important;
+    padding: 0.08rem 0.15rem !important;
     margin-top: 0.1rem !important;
   }
 
   .pushpin {
-    width: 5px !important;
-    height: 5px !important;
-    top: -3px !important;
+    width: 8px !important; /* Larger pin head to match bigger cards */
+    height: 8px !important;
+    top: -4px !important;
   }
 
   .masking-tape {
-    height: 0.25rem !important;
-    top: -2px !important;
+    height: 0.35rem !important;
+    top: -3px !important;
   }
 }
 
