@@ -1,176 +1,255 @@
-@import url("https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Inter:wght@400;500;600&family=Oswald:wght@500;600;700&family=Special+Elite&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&display=swap");
 
-.board-page {
-  --ink: #11140e;
-  --board-bg: #151811;
-  --board-bg-2: #22281b;
-  --cream: #f4edd9;
-  --cream-dim: #d8ceb0;
-  --cork-base: #a67c52;
-  --cork-dark: #6e4e30;
-  --red-string: #ba2d1d;
-  --red-dark: #6e170d;
-  --amber-tape: #dfb238;
-  --wood-1: #5c381d;
-  --wood-2: #341e0f;
+/* ══════════════════════════════════════════════════════════════════
+   COMMITTEE.SYS — minimal ASCII terminal
+   One typeface. One accent. Borders drawn from characters, not chrome.
+   ══════════════════════════════════════════════════════════════════ */
+
+/* ── Viewport Locking (No Page Scroll) ───────────────────────────── */
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+}
+
+.roster-page {
+  --bg: #07090a;
+  --panel: #0d1110;
+  --line: #24302c;
+  --line-soft: #182420;
+  --fg: #cdd8d2;
+  --fg-dim: #5e6d67;
+  --accent: #3ddc84;
+  --accent-dim: #1c4d33;
+  --flag: #ff5a4e;
 
   position: relative;
   height: 100vh;
-  width: 100vw;
-  background: radial-gradient(ellipse at 50% 0%, var(--board-bg-2), var(--board-bg) 80%);
-  color: var(--cream);
-  font-family: "Inter", sans-serif;
-  overflow: hidden;
-  padding: 1.5rem 2.5rem;
+  height: 100dvh;
+  max-width: 100vw;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: "IBM Plex Mono", monospace;
+  padding: 2vh 3vw 5vh 3vw;
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
   align-items: center;
-  box-sizing: border-box;
-  user-select: none;
+  overflow: hidden;
 }
 
-.board-page * {
+.roster-page * {
   box-sizing: border-box;
 }
 
-/* Film Grain Overlay */
-.grain {
+/* faint fixed scanline texture, kept very quiet */
+.roster-page .noise {
   position: fixed;
   inset: 0;
   pointer-events: none;
-  z-index: 40;
-  opacity: 0.06;
-  mix-blend-mode: overlay;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  z-index: 0;
+  opacity: 0.035;
+  background-image: repeating-linear-gradient(
+    180deg,
+    var(--fg) 0px,
+    var(--fg) 1px,
+    transparent 1px,
+    transparent 3px
+  );
 }
 
-/* ── Header & Filter Controls ───────────────────────────────────── */
-.board-header {
-  width: 100%;
-  max-width: 82rem;
-  flex-shrink: 0;
-  margin-bottom: 0.75rem;
+/* ── shared ASCII box: solid rule + literal "+" corners ────────── */
+.ascii-box {
+  position: relative;
+  border: 1px solid var(--line);
+}
+
+.ascii-corner {
+  position: absolute;
+  z-index: 2;
+  width: 1em;
+  height: 1em;
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 0.45rem;
+  justify-content: center;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.8rem;
+  line-height: 1;
+  color: var(--line);
+  background: var(--bg-behind, var(--panel));
+  pointer-events: none;
 }
 
-.board-title-tag {
-  text-align: center;
-  background: rgba(17, 20, 14, 0.85);
-  border: 1px solid rgba(244, 237, 217, 0.18);
-  padding: 0.35rem 1.4rem;
-  border-radius: 4px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+.ascii-corner.tl { top: 0; left: 0; transform: translate(-50%, -50%); }
+.ascii-corner.tr { top: 0; right: 0; transform: translate(50%, -50%); }
+.ascii-corner.bl { bottom: 0; left: 0; transform: translate(-50%, 50%); }
+.ascii-corner.br { bottom: 0; right: 0; transform: translate(50%, 50%); }
+
+/* ── Header ─────────────────────────────────────────────────────── */
+.roster-header {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 68rem;
+  flex: 0 0 auto;
+  margin-bottom: 0.8vh;
 }
 
-.case-label {
-  font-family: "Special Elite", monospace;
-  font-size: 0.7rem;
-  color: var(--amber-tape);
-  letter-spacing: 0.15em;
-  display: block;
+.titlebar {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: var(--fg-dim);
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  margin-bottom: 0.3rem;
 }
 
-.board-title-tag h1 {
-  margin: 0.1rem 0 0;
-  font-family: "Oswald", sans-serif;
-  font-size: 1.25rem;
-  letter-spacing: 0.08em;
-  color: var(--cream);
-  text-transform: uppercase;
+.titlebar::before { content: "┌─"; color: var(--line); }
+.titlebar-path {
+  border-bottom: 1px dashed var(--line);
+  flex: 1;
+  padding-bottom: 0.35rem;
 }
 
-.dept-filter-bar {
+.roster-h1 {
+  margin: 0;
+  font-size: clamp(0.85rem, 1.8vh, 1.3rem);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--fg);
+}
+
+.roster-h1 .prompt {
+  color: var(--accent);
+  margin-right: 0.5rem;
+}
+
+.cursor {
+  display: inline-block;
+  width: 0.55em;
+  margin-left: 0.15em;
+  background: var(--accent);
+  animation: blink 1s steps(1) infinite;
+  transform: translateY(0.1em);
+}
+.cursor::after { content: "\00a0"; }
+
+@keyframes blink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+
+.roster-sub {
+  margin: 0.2rem 0 0;
+  font-size: clamp(0.6rem, 1.1vh, 0.75rem);
+  color: var(--fg-dim);
+  letter-spacing: 0.03em;
+}
+
+.roster-sub span { color: var(--accent); }
+
+/* ── Filter row ─────────────────────────────────────────────────── */
+.filter-row {
   display: flex;
   flex-wrap: wrap;
-  justify-content: center;
-  gap: 0.4rem;
-  max-width: 100%;
+  gap: 0.35rem;
+  margin-top: 0.5rem;
 }
 
 .filter-btn {
-  background: rgba(244, 237, 217, 0.08);
-  border: 1px solid rgba(244, 237, 217, 0.2);
-  color: var(--cream-dim);
-  font-family: "Special Elite", monospace;
-  font-size: 0.68rem;
-  letter-spacing: 0.05em;
-  padding: 0.25rem 0.65rem;
+  background: none;
+  border: 1px solid var(--line);
+  color: var(--fg-dim);
+  font-family: "IBM Plex Mono", monospace;
+  font-size: clamp(0.55rem, 1vh, 0.7rem);
+  letter-spacing: 0.04em;
+  padding: 0.2rem 0.45rem;
   cursor: pointer;
-  border-radius: 2px;
-  transition: all 0.2s ease;
-  text-transform: uppercase;
-  touch-action: manipulation;
+  transition: background 0.1s ease, color 0.1s ease, border-color 0.1s ease;
 }
 
-.filter-btn:hover,
+.filter-btn::before { content: "[ "; color: var(--line); }
+.filter-btn::after { content: " ]"; color: var(--line); }
+
+.filter-btn:hover {
+  color: var(--fg);
+  border-color: var(--fg-dim);
+}
+
 .filter-btn.is-active {
-  background: var(--red-string);
-  border-color: var(--red-dark);
-  color: var(--cream);
-  box-shadow: 0 3px 8px rgba(186, 45, 29, 0.4);
+  color: var(--bg);
+  background: var(--accent);
+  border-color: var(--accent);
 }
 
-/* ── Board Frame & Desktop Viewport ──────────────────────────────── */
+.filter-btn.is-active::before,
+.filter-btn.is-active::after {
+  color: var(--bg);
+}
+
+/* ── Board Frame ────────────────────────────────────────────────── */
 .board-frame {
+  --bg-behind: var(--bg);
   position: relative;
-  flex: 1;
+  z-index: 1;
   width: 100%;
-  max-width: 80rem;
-  max-height: 76vh;
+  max-width: 68rem;
+  flex: 1 1 auto;
   min-height: 0;
-  padding: 10px;
-  border-radius: 8px;
-  background-image:
-    repeating-linear-gradient(112deg, #5c381d 0 3px, #482b15 3px 6px, #684122 6px 10px),
-    linear-gradient(160deg, var(--wood-1), var(--wood-2));
-  box-shadow:
-    0 20px 50px rgba(0, 0, 0, 0.7),
-    inset 0 0 0 2px rgba(0, 0, 0, 0.6);
+  padding: 16px;
+  background: var(--bg);
+  overflow: hidden; 
+  box-sizing: border-box;
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
+  margin: 1.5vh auto 0 auto; /* Breathing room above the board */
+  border: 1px solid var(--line);
+}
+
+.board-frame .ascii-corner {
+  color: var(--line);
+}
+
+.board-viewport {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden; 
 }
 
 .board {
+  --bg-behind: var(--panel);
   position: relative;
   width: 100%;
   height: 100%;
   max-height: 100%;
-  aspect-ratio: 16 / 9;
-  border-radius: 3px;
-  background-color: var(--cork-base);
-  background-image:
-    radial-gradient(rgba(0, 0, 0, 0.22) 15%, transparent 16%),
-    radial-gradient(rgba(0, 0, 0, 0.16) 15%, transparent 16%),
-    linear-gradient(135deg, var(--cork-base), var(--cork-dark));
-  background-size: 60px 60px, 120px 120px, 100% 100%;
-  background-position: 0 0, 30px 30px, 0 0;
-  box-shadow:
-    inset 0 0 0 3px rgba(0, 0, 0, 0.4),
-    inset 0 0 80px rgba(0, 0, 0, 0.65);
-  overflow: hidden;
+  aspect-ratio: 16 / 7;
+  background: var(--panel);
   touch-action: none;
+  overflow: hidden;
   transform-origin: var(--zoom-x, 50%) var(--zoom-y, 50%);
-  transition:
-    transform 0.55s cubic-bezier(0.65, 0, 0.35, 1),
-    transform-origin 0.55s cubic-bezier(0.65, 0, 0.35, 1),
-    filter 0.55s ease;
+  transition: transform 0.5s cubic-bezier(0.65, 0, 0.35, 1), 
+              transform-origin 0.5s cubic-bezier(0.65, 0, 0.35, 1), 
+              filter 0.5s ease;
   will-change: transform;
 }
 
-/* Clicking a pin punches the camera in on the corkboard, centered on
-   that card, before the dossier overlay reveals itself on top. Closing
-   reverses it, pulling back out to the full board. */
 .board.is-zoomed {
-  transform: scale(2.6);
-  filter: brightness(1.1) saturate(1.08);
+  transform: scale(2.2);
+  filter: brightness(1.12);
 }
 
-/* ── Red String Web ──────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .board { transition: none !important; }
+}
+
 .board-strings {
   position: absolute;
   inset: 0;
@@ -181,32 +260,16 @@
 }
 
 .string-group {
-  transition: opacity 0.25s ease;
-}
-
-.string-shadow {
-  fill: none;
-  stroke: rgba(0, 0, 0, 0.5);
-  stroke-width: 0.45;
-  stroke-linecap: round;
-  filter: blur(0.5px);
+  transition: opacity 0.2s ease;
 }
 
 .string-body {
   fill: none;
-  stroke: var(--red-string);
-  stroke-width: 0.28;
-  stroke-linecap: round;
-  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6));
-  transition: stroke 0.2s ease, stroke-width 0.2s ease;
-}
-
-.string-sheen {
-  fill: none;
-  stroke: #ff9b8e;
-  stroke-width: 0.08;
-  stroke-linecap: round;
-  opacity: 0.6;
+  stroke: var(--flag);
+  stroke-width: 0.18;
+  stroke-linecap: butt;
+  stroke-dasharray: 0.9 1.1;
+  transition: stroke 0.15s ease, stroke-width 0.15s ease;
 }
 
 .string-group.is-dimmed {
@@ -214,269 +277,185 @@
 }
 
 .string-group.is-highlighted .string-body {
-  stroke: #ff3b25;
-  stroke-width: 0.45;
+  stroke: var(--accent);
+  stroke-width: 0.3;
+  stroke-dasharray: none;
 }
 
-/* ── Pushpins ────────────────────────────────────────────────────── */
-.pushpin {
-  position: absolute;
-  top: -6px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: clamp(8px, 0.9vw, 12px);
-  height: clamp(8px, 0.9vw, 12px);
-  z-index: 10;
-  pointer-events: none;
-}
-
-.pin-head {
-  width: 100%;
-  height: 100%;
-  border-radius: 50%;
-  background: radial-gradient(circle at 35% 35%, #ff6b57, var(--red-dark));
-  box-shadow: 0 3px 5px rgba(0, 0, 0, 0.7), inset 0 -1px 3px rgba(0, 0, 0, 0.5);
-}
-
-.pin-shadow {
-  position: absolute;
-  bottom: -3px;
-  left: 2px;
-  width: 80%;
-  height: 30%;
-  background: rgba(0, 0, 0, 0.4);
-  border-radius: 50%;
-  filter: blur(1px);
-}
-
-/* ── Static Accessories ────────────────────────────────────────── */
-.evidence-tape {
-  position: absolute;
-  background: var(--amber-tape);
-  color: var(--ink);
-  font-family: "Oswald", sans-serif;
-  font-weight: 700;
-  font-size: 0.6rem;
-  letter-spacing: 0.12em;
-  padding: 0.15rem 1rem;
-  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.4);
-  opacity: 0.9;
-  z-index: 2;
-  pointer-events: none;
-}
-
-.tape-top-right {
-  top: 12px;
-  right: -25px;
-  transform: rotate(22deg);
-}
-
-.sticky-note {
+/* sys-log sticky note, top-left of the board */
+.sys-note {
+  --bg-behind: var(--panel);
   position: absolute;
   top: 10px;
   left: 10px;
-  width: clamp(4.8rem, 7vw, 6.8rem);
-  background: #f1e479;
-  color: #2b2509;
-  padding: 0.4rem 0.35rem;
-  box-shadow: 2px 4px 8px rgba(0, 0, 0, 0.35);
-  transform: rotate(-3deg);
-  z-index: 2;
+  z-index: 3;
+  width: clamp(9.5rem, 15vw, 13rem);
+  padding: 0.5rem 0.6rem;
+  background: var(--panel);
   pointer-events: none;
 }
 
-.note-body strong {
-  font-family: "Special Elite", monospace;
-  font-size: 0.48rem;
+.sys-note strong {
   display: block;
-  margin-bottom: 0.1rem;
+  font-size: 0.56rem;
+  letter-spacing: 0.1em;
+  color: var(--accent);
+  margin-bottom: 0.3rem;
+  padding-bottom: 0.25rem;
+  border-bottom: 1px dashed var(--line);
 }
+.sys-note strong::before { content: "> "; color: var(--fg-dim); }
 
-.note-body p {
+.sys-note p {
   margin: 0;
-  font-family: "Caveat", cursive;
-  font-size: 0.75rem;
-  line-height: 1.1;
+  font-size: 0.62rem;
+  line-height: 1.45;
+  color: var(--fg-dim);
 }
 
-/* ── Draggable Card Nodes ────────────────────────────────────────── */
 .board-list {
+  position: relative;
+  z-index: 2;
   list-style: none;
-  padding: 0;
   margin: 0;
+  padding: 0;
   width: 100%;
   height: 100%;
 }
 
 .pin-wrapper {
   position: absolute;
-  transform: translate(-50%, -50%) rotate(var(--rot));
-  z-index: 2;
-  transition: opacity 0.25s ease, z-index 0s;
+  transform: translate(-50%, -50%);
   touch-action: none;
-  cursor: grab;
+  cursor: crosshair;
+  transition: opacity 0.2s ease;
 }
 
-.pin-wrapper:active {
-  cursor: grabbing;
-  z-index: 20;
-}
-
+.pin-wrapper:active { cursor: grabbing; z-index: 10; }
 .pin-wrapper:hover,
-.pin-wrapper:focus-within {
-  transform: translate(-50%, -50%) rotate(0deg) scale(1.06);
-  z-index: 15;
-}
+.pin-wrapper:focus-within { z-index: 5; }
 
 .pin-wrapper.is-filtered-out {
-  opacity: 0.12;
-  filter: grayscale(0.85);
+  opacity: 0.14;
   pointer-events: none;
 }
 
+/* Larger pin cards */
 .pin-card {
-  position: relative;
+  --bg-behind: var(--panel);
   display: flex;
   flex-direction: column;
-  align-items: center;
-  width: clamp(4rem, 6.8vw, 6.8rem);
-  background: none;
+  align-items: stretch;
+  width: clamp(5rem, 8.5vw, 7.8rem);
+  background: var(--panel);
   border: none;
   padding: 0;
   cursor: pointer;
   color: inherit;
-  touch-action: none;
+  font-family: "IBM Plex Mono", monospace;
+  text-align: left;
 }
 
+.pin-card .ascii-corner { color: var(--line); }
+
+.pin-card:hover,
 .pin-card:focus-visible {
-  outline: 2px solid var(--amber-tape);
+  outline: none;
 }
 
-.masking-tape {
-  position: absolute;
-  top: -6px;
-  left: 50%;
-  width: 35%;
-  height: 0.65rem;
-  background: rgba(244, 237, 217, 0.55);
-  border: 1px solid rgba(216, 206, 176, 0.4);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-  backdrop-filter: blur(1px);
-  z-index: 3;
-  pointer-events: none;
+.pin-card:hover .ascii-corner,
+.pin-card:focus-visible .ascii-corner {
+  color: var(--accent);
 }
 
-.polaroid-frame {
+.pin-photo-frame {
   position: relative;
   width: 100%;
-  background: #faf6eb;
-  padding: 0.3rem 0.3rem 0.4rem;
-  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.5);
-  border-radius: 1px;
+  aspect-ratio: 1 / 1.15;
+  overflow: hidden;
+  background: #050706;
 }
 
-.real-photo,
-.placeholder-photo {
-  width: 100%;
-  aspect-ratio: 1 / 1.1;
-  object-fit: cover;
-  display: block;
-  position: relative;
-}
-
-.placeholder-photo {
-  background: #ded2b5;
-  border: 1px solid rgba(0, 0, 0, 0.1);
-}
-
-.silhouette {
+.pin-photo-frame .portrait-img,
+.pin-photo-frame .portrait-redacted {
   width: 100%;
   height: 100%;
 }
 
-.polaroid-label {
-  margin-top: 0.2rem;
-  text-align: center;
-  display: flex;
-  flex-direction: column;
+.pin-photo-frame .portrait-redacted {
+  grid-template-columns: repeat(6, 1fr);
+  grid-template-rows: repeat(7, 1fr);
 }
 
-.handwritten-name {
-  font-family: "Caveat", cursive;
-  font-size: clamp(0.65rem, 0.85vw, 1rem);
-  font-weight: 700;
-  color: #1a1813;
-  line-height: 1;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+.pin-id {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  z-index: 2;
+  font-size: 0.52rem;
+  letter-spacing: 0.02em;
+  color: var(--accent);
+  background: rgba(5, 7, 6, 0.8);
+  padding: 0 3px;
 }
 
-.role-sub {
-  font-family: "Special Elite", monospace;
-  font-size: 0.48rem;
-  color: #5c5543;
-  margin-top: 0.08rem;
-  text-transform: uppercase;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.hover-hint {
+.pin-hint {
   position: absolute;
   inset: auto 0 0 0;
-  background: var(--ink);
-  color: var(--cream);
-  font-family: "Special Elite", monospace;
-  font-size: 0.48rem;
-  padding: 0.15rem 0;
+  z-index: 2;
   text-align: center;
+  font-size: 0.46rem;
+  letter-spacing: 0.04em;
+  color: var(--bg);
+  background: var(--accent);
+  padding: 0.14rem 0;
   opacity: 0;
-  transform: translateY(4px);
-  transition: all 0.15s ease;
+  transition: opacity 0.1s ease;
 }
 
-.pin-card:hover .hover-hint,
-.pin-card:focus-visible .hover-hint {
+.pin-card:hover .pin-hint,
+.pin-card:focus-visible .pin-hint {
   opacity: 1;
-  transform: translateY(0);
 }
 
-.evidence-tag {
-  margin-top: 0.2rem;
-  background: var(--ink);
-  border: 1px solid rgba(244, 237, 217, 0.2);
-  width: 100%;
-  padding: 0.12rem 0.25rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-family: "Special Elite", monospace;
-  font-size: 0.45rem;
-  color: var(--cream-dim);
+@media (max-width: 48rem), (orientation: portrait) {
+  .roster-page {
+    padding: 2vh 3vw 5vh 3vw;
+  }
+
+  .board-frame {
+    max-width: 100% !important;
+  }
+
+  .board {
+    aspect-ratio: 9 / 12 !important;
+  }
+
+  .pin-card { 
+    width: clamp(4rem, 13vw, 5.8rem) !important; 
+  }
+  
+  .pin-id { 
+    font-size: 0.4rem; 
+  }
+  
+  .pin-hint, 
+  .sys-note { 
+    display: none; 
+  }
 }
 
-.tag-dept {
-  color: var(--amber-tape);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 60%;
-}
-
-/* ── Case File Dossier Modal ─────────────────────────────────────── */
+/* ── Dossier overlay ────────────────────────────────────────────── */
 .dossier-overlay {
   position: fixed;
   inset: 0;
   z-index: 50;
-  background: rgba(10, 12, 8, 0.88);
-  backdrop-filter: blur(5px);
+  background: rgba(3, 5, 4, 0.88);
   display: flex;
   align-items: center;
   justify-content: center;
   padding: clamp(0.5rem, 2vw, 1.5rem);
-  animation: overlay-in 0.32s ease 0.22s both;
+  animation: overlay-in 0.3s ease both;
   perspective: 1600px;
 }
 
@@ -484,112 +463,79 @@
   animation: overlay-out 0.18s ease both;
 }
 
-@keyframes overlay-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-@keyframes overlay-out {
-  from { opacity: 1; }
-  to { opacity: 0; }
-}
+@keyframes overlay-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes overlay-out { from { opacity: 1; } to { opacity: 0; } }
 
-.case-folder {
+.dossier {
+  --bg-behind: var(--panel);
   position: relative;
-  width: min(34rem, 100%);
-  max-width: 520px;
+  width: min(30rem, 100%);
+  aspect-ratio: 1 / 1.4142;
+  max-height: 92vh;
+  background: var(--panel);
   display: flex;
   flex-direction: column;
+  box-sizing: border-box;
 }
 
-/* ── Case File Transitions ───────────────────────────────────────── */
-
-/* Opening: the board has already punched in on the clicked pin by the
-   time this plays, so the folder just settles into place on top of it —
-   a quick reveal rather than its own big zoom. Closing reverses it fast,
-   clearing out of the way so the board's zoom-out is what reads. */
-.case-folder--enter-open {
-  animation: folder-reveal-in 0.38s cubic-bezier(0.16, 0.8, 0.24, 1) 0.2s both;
+.dossier-inner {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
-@keyframes folder-reveal-in {
+.dossier--enter-open {
+  animation: dossier-reveal-in 0.36s cubic-bezier(0.16, 0.8, 0.24, 1) both;
+}
+
+@keyframes dossier-reveal-in {
   0% {
     opacity: 0;
-    transform: scale(0.86) translateY(10px);
-    filter: brightness(1.5) saturate(1.15);
+    transform: scale(0.88) translateY(10px);
+    filter: brightness(1.6);
   }
   100% {
     opacity: 1;
     transform: scale(1) translateY(0);
-    filter: brightness(1) saturate(1);
-  }
-}
-
-.case-folder.is-closing {
-  animation: folder-reveal-out 0.18s cubic-bezier(0.4, 0, 0.7, 0.2) both;
-}
-
-@keyframes folder-reveal-out {
-  0% {
-    opacity: 1;
-    transform: scale(1) translateY(0);
-    filter: brightness(1);
-  }
-  100% {
-    opacity: 0;
-    transform: scale(0.9) translateY(6px);
-    filter: brightness(1.3);
-  }
-}
-
-/* Paging forward / back: the folder spins in around its vertical axis
-   like a card flicked from a rolodex, hinging past edge-on before
-   settling flat. */
-.case-folder--enter-next {
-  animation: folder-flip-next 0.42s cubic-bezier(0.22, 0.75, 0.24, 1) both;
-}
-.case-folder--enter-prev {
-  animation: folder-flip-prev 0.42s cubic-bezier(0.22, 0.75, 0.24, 1) both;
-}
-
-@keyframes folder-flip-next {
-  0% {
-    opacity: 0;
-    transform: translateX(18%) rotateY(-78deg) scale(0.88);
-    filter: brightness(1.9);
-  }
-  55% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 1;
-    transform: translateX(0) rotateY(0deg) scale(1);
-    filter: brightness(1);
-  }
-}
-@keyframes folder-flip-prev {
-  0% {
-    opacity: 0;
-    transform: translateX(-18%) rotateY(78deg) scale(0.88);
-    filter: brightness(1.9);
-  }
-  55% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 1;
-    transform: translateX(0) rotateY(0deg) scale(1);
     filter: brightness(1);
   }
 }
 
-/* A single phosphor-green scanline sweeps down over every fresh file,
-   like it's being run through a document scanner before release. */
+.dossier.is-closing {
+  animation: dossier-reveal-out 0.18s cubic-bezier(0.4, 0, 0.7, 0.2) both;
+}
+
+@keyframes dossier-reveal-out {
+  0% { opacity: 1; transform: scale(1) translateY(0); filter: brightness(1); }
+  100% { opacity: 0; transform: scale(0.9) translateY(6px); filter: brightness(1.4); }
+}
+
+.dossier--enter-next {
+  animation: dossier-flip-next 0.4s cubic-bezier(0.22, 0.75, 0.24, 1) both;
+}
+.dossier--enter-prev {
+  animation: dossier-flip-prev 0.4s cubic-bezier(0.22, 0.75, 0.24, 1) both;
+}
+
+@keyframes dossier-flip-next {
+  0% { opacity: 0; transform: translateX(16%) rotateY(-78deg) scale(0.9); filter: brightness(1.8); }
+  55% { opacity: 1; }
+  100% { opacity: 1; transform: translateX(0) rotateY(0deg) scale(1); filter: brightness(1); }
+}
+@keyframes dossier-flip-prev {
+  0% { opacity: 0; transform: translateX(-16%) rotateY(78deg) scale(0.9); filter: brightness(1.8); }
+  55% { opacity: 1; }
+  100% { opacity: 1; transform: translateX(0) rotateY(0deg) scale(1); filter: brightness(1); }
+}
+
 .scan-sweep {
   position: absolute;
   inset: 0;
   z-index: 6;
   pointer-events: none;
-  border-radius: 0 3px 3px 3px;
   overflow: hidden;
 }
 
@@ -598,18 +544,18 @@
   position: absolute;
   left: -10%;
   right: -10%;
-  height: 26%;
-  top: -30%;
+  height: 22%;
+  top: -26%;
   background: linear-gradient(
     180deg,
     transparent 0%,
-    rgba(190, 255, 210, 0) 30%,
-    rgba(190, 255, 210, 0.4) 50%,
-    rgba(190, 255, 210, 0) 70%,
+    rgba(61, 220, 132, 0) 30%,
+    rgba(61, 220, 132, 0.35) 50%,
+    rgba(61, 220, 132, 0) 70%,
     transparent 100%
   );
   mix-blend-mode: screen;
-  animation: scan-sweep-move 0.65s cubic-bezier(0.3, 0.7, 0.4, 1) both;
+  animation: scan-sweep-move 0.6s cubic-bezier(0.3, 0.7, 0.4, 1) both;
 }
 
 @keyframes scan-sweep-move {
@@ -619,309 +565,227 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .case-folder--enter-open,
-  .case-folder--enter-next,
-  .case-folder--enter-prev,
-  .case-folder.is-closing,
-  .dossier-overlay,
-  .dossier-overlay.is-closing,
   .scan-sweep::after {
     animation: none !important;
   }
-
-  .board {
-    transition: none !important;
-  }
-}
-
-.folder-tab {
-  align-self: flex-start;
-  background: #c2a878;
-  color: #2b2313;
-  padding: 0.25rem 0.75rem 0.3rem;
-  border-radius: 4px 4px 0 0;
-  font-family: "Special Elite", monospace;
-  font-size: 0.65rem;
-  font-weight: bold;
-  letter-spacing: 0.08em;
-  box-shadow: 0 -4px 8px rgba(0, 0, 0, 0.3);
-  z-index: 1;
-}
-
-.dossier {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 1 / 1.4142;
-  background: var(--cream);
-  color: var(--ink);
-  border-radius: 0 3px 3px 3px;
-  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.7);
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  box-sizing: border-box;
-}
-
-.coffee-stain {
-  position: absolute;
-  top: -30px;
-  right: -30px;
-  width: 110px;
-  height: 110px;
-  border-radius: 50%;
-  border: 7px solid rgba(110, 78, 48, 0.14);
-  box-shadow: inset 0 0 12px rgba(110, 78, 48, 0.08);
-  pointer-events: none;
 }
 
 .dossier-top {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: var(--ink);
-  color: var(--cream);
-  padding: 0.4rem 0.8rem;
+  gap: 0.75rem;
+  padding: 0.6rem 0.9rem;
+  border-bottom: 1px solid var(--line);
+  font-size: 0.66rem;
+  letter-spacing: 0.05em;
+  color: var(--fg-dim);
 }
 
-.dossier-classification {
-  font-family: "Special Elite", monospace;
-  font-size: 0.58rem;
+.dossier-file-tag { color: var(--fg); }
+.dossier-file-tag::before { content: "FILE "; color: var(--fg-dim); }
+
+.dossier-flag {
+  color: var(--flag);
   letter-spacing: 0.1em;
-  color: var(--amber-tape);
 }
+.dossier-flag::before { content: "[!] "; }
 
 .dossier-close {
-  font-family: "Special Elite", monospace;
-  font-size: 0.6rem;
   background: none;
-  border: 1px solid rgba(244, 237, 217, 0.3);
-  color: var(--cream);
-  padding: 0.15rem 0.45rem;
+  border: 1px solid var(--line);
+  color: var(--fg-dim);
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.04em;
+  padding: 0.2rem 0.5rem;
   cursor: pointer;
   touch-action: manipulation;
 }
 
 .dossier-close:hover {
-  border-color: var(--red-string);
-  color: var(--red-string);
+  border-color: var(--flag);
+  color: var(--flag);
 }
 
 .dossier-body {
-  position: relative;
   flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 0.5rem;
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-  padding: 1rem;
-  overflow: hidden;
 }
 
-.paperclip {
-  position: absolute;
-  top: -8px;
-  left: 1.2rem;
-  width: 0.9rem;
-  height: 2rem;
-  border: 3px solid #8f959e;
-  border-radius: 12px;
-  box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
-  z-index: 5;
-}
-
-.dossier-hero-frame {
-  flex: 1;
+.dossier-portrait-frame {
+  --bg-behind: #050706;
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 9rem;
   width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 0;
-  border: 1px solid rgba(0, 0, 0, 0.15);
-  background: #ded2b5;
-  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-  margin: 0.5rem 0;
-  padding: 0.5rem;
-  box-sizing: border-box;
+  background: #050706;
+  padding: 0;
 }
 
-.hero-photo-img {
+.portrait-img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  border: 1px solid rgba(0, 0, 0, 0.2);
+  filter: grayscale(1) contrast(1.15) brightness(0.95);
+  display: block;
 }
 
-.hero-placeholder {
+.portrait-redacted {
   width: 100%;
   height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  grid-template-rows: repeat(11, 1fr);
+  overflow: hidden;
 }
 
-.silhouette-hero {
-  width: 100%;
-  height: 100%;
+.portrait-redacted span {
+  display: block;
+  background: var(--line-soft);
 }
 
-.dossier-meta-wrapper {
-  width: 100%;
+.portrait-redacted span:nth-child(3n) { background: var(--line); }
+.portrait-redacted span:nth-child(7n) { background: var(--panel); }
+
+.portrait-caption {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 2;
+  text-align: center;
+  font-size: 0.52rem;
+  letter-spacing: 0.1em;
+  color: var(--fg);
+  background: rgba(5, 7, 6, 0.78);
+  padding: 0.28rem 0.4rem;
+}
+
+.dossier-footer {
+  flex: 0 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 0.7rem;
+  padding: 0.85rem 0.5rem 0.2rem;
+  border-top: 1px solid var(--line);
 }
 
-.dossier-profile-header {
+.dossier-role-block {
   text-align: center;
 }
 
-.dossier-role-title {
+.dossier-eyebrow {
+  display: block;
+  font-size: 0.6rem;
+  letter-spacing: 0.16em;
+  color: var(--fg-dim);
+  margin-bottom: 0.3rem;
+}
+.dossier-eyebrow::before { content: "> "; color: var(--accent); }
+
+.dossier-role {
+  display: inline-block;
+  overflow: hidden;
+  white-space: nowrap;
+  border-right: 2px solid var(--accent);
   margin: 0;
-  font-family: "Oswald", sans-serif;
-  font-size: clamp(1rem, 1.5vw, 1.35rem);
-  line-height: 1.1;
-  color: var(--ink);
-  text-transform: uppercase;
+  font-size: clamp(1rem, 2.4vw, 1.25rem);
+  font-weight: 600;
+  color: var(--fg);
+  animation: type-in 0.5s steps(var(--len, 12)) both;
 }
 
-.dossier-role-sub {
-  font-family: "Special Elite", monospace;
-  font-size: 0.65rem;
-  color: #635b47;
-  margin-top: 0.1rem;
+@keyframes type-in {
+  from { width: 0; }
+  to { width: var(--chw, 100%); }
 }
+
+.dossier-subject {
+  margin-top: 0.35rem;
+  font-size: 0.7rem;
+  color: var(--fg-dim);
+}
+.dossier-subject::before { content: "SUBJECT · "; color: var(--line); }
 
 .dossier-fields {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  border: 1px solid rgba(17, 20, 14, 0.25);
-  text-align: left;
+  border: 1px solid var(--line);
 }
 
 .field-row {
   display: flex;
-  border-bottom: 1px solid rgba(17, 20, 14, 0.18);
+  border-bottom: 1px dashed var(--line-soft);
 }
-
-.field-row:last-child {
-  border-bottom: none;
-}
+.field-row:last-child { border-bottom: none; }
 
 .field-label {
-  width: clamp(4.8rem, 8vw, 6.5rem);
-  background: rgba(17, 20, 14, 0.06);
-  color: var(--ink);
-  font-family: "Special Elite", monospace;
-  font-size: 0.54rem;
-  padding: 0.25rem 0.4rem;
-  border-right: 1px solid rgba(17, 20, 14, 0.18);
-  display: flex;
-  align-items: center;
-  text-transform: uppercase;
   flex-shrink: 0;
+  width: 6.4rem;
+  padding: 0.5rem 0.55rem;
+  background: var(--line-soft);
+  color: var(--accent);
+  font-size: 0.58rem;
+  letter-spacing: 0.05em;
+  border-right: 1px dashed var(--line-soft);
 }
+.field-label::before { content: "> "; color: var(--fg-dim); }
 
 .field-value {
   flex: 1;
-  font-family: "Oswald", sans-serif;
-  font-size: 0.82rem;
-  color: var(--ink);
-  padding: 0.25rem 0.45rem;
+  padding: 0.5rem 0.6rem;
+  font-size: 0.78rem;
+  color: var(--fg);
 }
 
 .field-row--note .field-value {
-  font-family: "Caveat", cursive;
-  font-size: clamp(0.85rem, 1.1vw, 1.05rem);
-  font-weight: 700;
-  color: #3b321a;
+  color: var(--fg-dim);
+  font-size: 0.72rem;
 }
+.field-row--note .field-value::before { content: "// "; color: var(--line); }
 
-.dossier-nav-bar {
+.dossier-nav {
   display: flex;
   justify-content: space-between;
-  background: var(--ink);
-  padding: 0.35rem 0.6rem;
-  border-top: 1px solid rgba(244, 237, 217, 0.15);
+  border-top: 1px solid var(--line);
+  padding: 0.5rem 0.7rem;
 }
 
-.carousel-nav {
-  background: rgba(244, 237, 217, 0.1);
-  border: 1px solid var(--amber-tape);
-  color: var(--amber-tape);
-  font-family: "Special Elite", monospace;
-  font-size: 0.6rem;
-  padding: 0.28rem 0.6rem;
+.nav-btn {
+  background: none;
+  border: 1px solid var(--line);
+  color: var(--fg-dim);
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.64rem;
+  letter-spacing: 0.03em;
+  padding: 0.3rem 0.65rem;
   cursor: pointer;
-  transition: all 0.2s ease;
   touch-action: manipulation;
 }
 
-.carousel-nav:hover {
-  background: var(--amber-tape);
-  color: var(--ink);
+.nav-btn:hover {
+  color: var(--accent);
+  border-color: var(--accent);
 }
 
-@media (max-width: 48rem) {
-  .pin-wrapper {
-    width: 4.5rem !important; /* Increased from 2.2rem */
-    max-width: 4.5rem !important;
-    min-width: 0 !important;
+@media (prefers-reduced-motion: reduce) {
+  .cursor,
+  .dossier-role,
+  .dossier--enter-open,
+  .dossier--enter-next,
+  .dossier--enter-prev,
+  .dossier.is-closing,
+  .dossier-overlay,
+  .dossier-overlay.is-closing {
+    animation: none !important;
   }
-
-  .pin-card {
-    width: 100% !important;
-    min-width: 0 !important;
-  }
-
-  .polaroid-frame {
-    padding: 0.2rem 0.2rem 0.3rem !important;
-  }
-
-  .handwritten-name {
-    font-size: 0.65rem !important; /* Scaled up for readability */
-    line-height: 1 !important;
-  }
-
-  .role-sub {
-    font-size: 0.45rem !important;
-    margin-top: 0.02rem !important;
-  }
-
-  .evidence-tag {
-    font-size: 0.4rem !important;
-    padding: 0.08rem 0.15rem !important;
-    margin-top: 0.1rem !important;
-  }
-
-  .pushpin {
-    width: 8px !important; /* Larger pin head to match bigger cards */
-    height: 8px !important;
-    top: -4px !important;
-  }
-
-  .masking-tape {
-    height: 0.35rem !important;
-    top: -3px !important;
-  }
+  .dossier-role { width: var(--chw, 100%); border-right: none; }
 }
 
-@media (max-width: 600px) {
-  .dossier-overlay {
-    padding: 2rem; /* Increased padding around the overlay border */
-  }
-
-  .case-folder {
-    max-width: 90vw; /* Keeps it slightly smaller than the full screen width */
-    width: 100%;
-  }
-
-  .dossier {
-    aspect-ratio: auto;
-    min-height: 75vh;
-    max-height: 85vh; /* Prevents it from touching the top and bottom borders */
-    padding: 0;
-  }
+@media (max-width: 30rem) {
+  .dossier-overlay { padding: 0.6rem; }
+  .dossier { aspect-ratio: auto; max-height: 92vh; min-height: 70vh; }
 }
