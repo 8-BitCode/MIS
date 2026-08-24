@@ -311,7 +311,7 @@ export default function Committee() {
       <header className="board-header">
         <div className="board-title-tag">
           <span className="case-label">EXECUTIVE COMMITTEE DOSSIER</span>
-          <h1>TEAM ROSTER</h1>
+          <h1>COMMITTEE BOARD</h1>
         </div>
 
         <nav className="dept-filter-bar" aria-label="Department Filters">
@@ -362,7 +362,7 @@ export default function Committee() {
             <Pushpin />
             <div className="note-body">
               <strong>INVESTIGATION:</strong>
-              <p>Click a card to review file credentials or drag to rearrange evidence.</p>
+              <p>Click a photo card to open credentials or drag to rearrange evidence.</p>
             </div>
           </div>
 
@@ -387,27 +387,14 @@ export default function Committee() {
                     className="pin-card"
                     role="button"
                     tabIndex={0}
-                    aria-label={`Open personnel file for ${m.role}, ${m.name}`}
+                    aria-label={`Open personnel file for ${m.role}`}
                   >
                     <Pushpin />
-                    <div
-                      className="masking-tape"
-                      style={{ transform: `translateX(-50%) rotate(${m.tapeAngle}deg)` }}
-                      aria-hidden="true"
-                    />
 
+                    {/* ONLY THE POLAROID PICTURE FRAME REMAINS */}
                     <div className="polaroid-frame">
                       <HeroPhoto member={m} />
-                      <div className="polaroid-label">
-                        <span className="handwritten-name">{m.name}</span>
-                        <span className="role-sub">{m.role}</span>
-                      </div>
                       <span className="hover-hint">VIEW DOSSIER</span>
-                    </div>
-
-                    <div className="evidence-tag">
-                      <span className="tag-file">ID: #{m.file}</span>
-                      <span className="tag-dept">{m.dept}</span>
                     </div>
                   </div>
                 </li>
