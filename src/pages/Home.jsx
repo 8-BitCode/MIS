@@ -6,7 +6,7 @@ import DecryptText from "./DecryptText";
 import { useEvidenceSFX } from "./useEvidenceSFX";
 
 // Swap this import for wherever spy.mp4 lives in your project
-import spyVideo from "../assets/spy.mp4";
+import spyVideo from "../Assets/spy.mp4";
 
 const AsciiCorners = memo(() => (
   <>
