@@ -317,7 +317,6 @@ body:has(.roster-page) {
 }
 
 .board-list {
-  position: relative;
   z-index: 2;
   list-style: none;
   margin: 0;
