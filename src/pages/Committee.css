@@ -9,6 +9,12 @@
 html, body {
   margin: 0;
   padding: 0;
+  background: #07090a;
+}
+
+/* Lock viewport ONLY when the Committee roster page is active */
+html:has(.roster-page),
+body:has(.roster-page) {
   height: 100vh;
   height: 100dvh;
   overflow: hidden;
@@ -25,14 +31,13 @@ html, body {
   --accent-dim: #1c4d33;
   --flag: #ff5a4e;
 
-  position: relative;
   height: 100vh;
   height: 100dvh;
   max-width: 100vw;
   background: var(--bg);
   color: var(--fg);
   font-family: "IBM Plex Mono", monospace;
-  padding: 2vh 3vw 5vh 3vw;
+  padding: 0 2vw 0.5vh 2vw;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
@@ -44,7 +49,7 @@ html, body {
   box-sizing: border-box;
 }
 
-/* faint fixed scanline texture, kept very quiet */
+/* faint fixed scanline texture */
 .roster-page .noise {
   position: fixed;
   inset: 0;
@@ -87,14 +92,14 @@ html, body {
 .ascii-corner.bl { bottom: 0; left: 0; transform: translate(-50%, 50%); }
 .ascii-corner.br { bottom: 0; right: 0; transform: translate(50%, 50%); }
 
-/* ── Header ─────────────────────────────────────────────────────── */
 .roster-header {
   position: relative;
   z-index: 1;
   width: 100%;
   max-width: 68rem;
   flex: 0 0 auto;
-  margin-bottom: 0.8vh;
+  margin-bottom: 2vh;
+  margin-top: 0.3vh;
 }
 
 .titlebar {
@@ -102,7 +107,7 @@ html, body {
   align-items: center;
   gap: 0.6rem;
   color: var(--fg-dim);
-  font-size: 0.72rem;
+  font-size: 0.85rem;
   letter-spacing: 0.04em;
   margin-bottom: 0.3rem;
 }
@@ -111,12 +116,12 @@ html, body {
 .titlebar-path {
   border-bottom: 1px dashed var(--line);
   flex: 1;
-  padding-bottom: 0.35rem;
+  padding-bottom: 0.4rem;
 }
 
 .roster-h1 {
   margin: 0;
-  font-size: clamp(0.85rem, 1.8vh, 1.3rem);
+  font-size: clamp(1.2rem, 2.2vh, 1.8rem);
   font-weight: 600;
   letter-spacing: 0.02em;
   color: var(--fg);
@@ -143,8 +148,8 @@ html, body {
 }
 
 .roster-sub {
-  margin: 0.2rem 0 0;
-  font-size: clamp(0.6rem, 1.1vh, 0.75rem);
+  margin: 0.15rem 0 0;
+  font-size: clamp(0.7rem, 1.2vh, 0.9rem);
   color: var(--fg-dim);
   letter-spacing: 0.03em;
 }
@@ -155,8 +160,8 @@ html, body {
 .filter-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.35rem;
-  margin-top: 0.5rem;
+  gap: 0.4rem;
+  margin-top: 0.4rem;
 }
 
 .filter-btn {
@@ -164,9 +169,9 @@ html, body {
   border: 1px solid var(--line);
   color: var(--fg-dim);
   font-family: "IBM Plex Mono", monospace;
-  font-size: clamp(0.55rem, 1vh, 0.7rem);
+  font-size: clamp(0.6rem, 1vh, 0.8rem);
   letter-spacing: 0.04em;
-  padding: 0.2rem 0.45rem;
+  padding: 0.2rem 0.5rem;
   cursor: pointer;
   transition: background 0.1s ease, color 0.1s ease, border-color 0.1s ease;
 }
@@ -190,23 +195,23 @@ html, body {
   color: var(--bg);
 }
 
-/* ── Board Frame ────────────────────────────────────────────────── */
 .board-frame {
   --bg-behind: var(--bg);
   position: relative;
   z-index: 1;
   width: 100%;
   max-width: 68rem;
-  flex: 1 1 auto;
+  flex: 1 1 0;
   min-height: 0;
-  padding: 16px;
+  max-height: calc(100dvh - 200px);
+  padding: 4px;
   background: var(--bg);
   overflow: hidden; 
   box-sizing: border-box;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 1.5vh auto 0 auto; /* Breathing room above the board */
+  margin: 0 auto 0.5vh auto;
   border: 1px solid var(--line);
 }
 
@@ -230,7 +235,6 @@ html, body {
   width: 100%;
   height: 100%;
   max-height: 100%;
-  aspect-ratio: 16 / 7;
   background: var(--panel);
   touch-action: none;
   overflow: hidden;
@@ -282,34 +286,33 @@ html, body {
   stroke-dasharray: none;
 }
 
-/* sys-log sticky note, top-left of the board */
 .sys-note {
   --bg-behind: var(--panel);
   position: absolute;
-  top: 10px;
-  left: 10px;
+  top: 8px;
+  left: 8px;
   z-index: 3;
-  width: clamp(9.5rem, 15vw, 13rem);
-  padding: 0.5rem 0.6rem;
+  width: clamp(8rem, 13vw, 12rem);
+  padding: 0.4rem 0.5rem;
   background: var(--panel);
   pointer-events: none;
 }
 
 .sys-note strong {
   display: block;
-  font-size: 0.56rem;
+  font-size: 0.5rem;
   letter-spacing: 0.1em;
   color: var(--accent);
-  margin-bottom: 0.3rem;
-  padding-bottom: 0.25rem;
+  margin-bottom: 0.2rem;
+  padding-bottom: 0.2rem;
   border-bottom: 1px dashed var(--line);
 }
 .sys-note strong::before { content: "> "; color: var(--fg-dim); }
 
 .sys-note p {
   margin: 0;
-  font-size: 0.62rem;
-  line-height: 1.45;
+  font-size: 0.55rem;
+  line-height: 1.4;
   color: var(--fg-dim);
 }
 
@@ -340,13 +343,12 @@ html, body {
   pointer-events: none;
 }
 
-/* Larger pin cards */
 .pin-card {
   --bg-behind: var(--panel);
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  width: clamp(5rem, 8.5vw, 7.8rem);
+  width: clamp(4.5rem, 7.5vw, 7rem);
   background: var(--panel);
   border: none;
   padding: 0;
@@ -389,14 +391,14 @@ html, body {
 
 .pin-id {
   position: absolute;
-  top: 3px;
-  left: 3px;
+  top: 2px;
+  left: 2px;
   z-index: 2;
-  font-size: 0.52rem;
+  font-size: 0.45rem;
   letter-spacing: 0.02em;
   color: var(--accent);
   background: rgba(5, 7, 6, 0.8);
-  padding: 0 3px;
+  padding: 0 2px;
 }
 
 .pin-hint {
@@ -404,11 +406,11 @@ html, body {
   inset: auto 0 0 0;
   z-index: 2;
   text-align: center;
-  font-size: 0.46rem;
+  font-size: 0.4rem;
   letter-spacing: 0.04em;
   color: var(--bg);
   background: var(--accent);
-  padding: 0.14rem 0;
+  padding: 0.1rem 0;
   opacity: 0;
   transition: opacity 0.1s ease;
 }
@@ -420,28 +422,27 @@ html, body {
 
 @media (max-width: 48rem), (orientation: portrait) {
   .roster-page {
-    padding: 2vh 3vw 5vh 3vw;
+    padding: 0 2vw 1vh 2vw;
+  }
+
+  .roster-header {
+    margin-bottom: 2vh;
+    margin-top: 0.5vh;
   }
 
   .board-frame {
     max-width: 100% !important;
+    flex: 1 1 0;
+    min-height: 0;
+    max-height: calc(100dvh - 220px) !important; 
+    margin: 0 auto;
   }
 
   .board {
-    aspect-ratio: 9 / 12 !important;
-  }
-
-  .pin-card { 
-    width: clamp(4rem, 13vw, 5.8rem) !important; 
-  }
-  
-  .pin-id { 
-    font-size: 0.4rem; 
-  }
-  
-  .pin-hint, 
-  .sys-note { 
-    display: none; 
+    width: 100%;
+    height: 100%;
+    max-height: 100%;
+    aspect-ratio: auto !important; 
   }
 }
 
@@ -476,6 +477,7 @@ html, body {
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
+  transform-style: preserve-3d;
 }
 
 .dossier-inner {
@@ -504,8 +506,12 @@ html, body {
   }
 }
 
-.dossier.is-closing {
-  animation: dossier-reveal-out 0.18s cubic-bezier(0.4, 0, 0.7, 0.2) both;
+/* Specificity fix: override entrance animations regardless of mode when closing */
+.dossier.is-closing,
+.dossier--enter-open.is-closing,
+.dossier--enter-next.is-closing,
+.dossier--enter-prev.is-closing {
+  animation: dossier-reveal-out 0.18s cubic-bezier(0.4, 0, 0.7, 0.2) both !important;
 }
 
 @keyframes dossier-reveal-out {
@@ -531,17 +537,18 @@ html, body {
   100% { opacity: 1; transform: translateX(0) rotateY(0deg) scale(1); filter: brightness(1); }
 }
 
-.scan-sweep {
+/* Ensure sweep animation never catches mouse hit tests */
+.scan-sweep,
+.scan-sweep::after {
   position: absolute;
   inset: 0;
-  z-index: 6;
-  pointer-events: none;
+  z-index: 1;
+  pointer-events: none !important;
   overflow: hidden;
 }
 
 .scan-sweep::after {
   content: "";
-  position: absolute;
   left: -10%;
   right: -10%;
   height: 22%;
@@ -570,6 +577,13 @@ html, body {
   }
 }
 
+.dossier-top,
+.dossier-body,
+.dossier-nav {
+  position: relative;
+  z-index: 10;
+}
+
 .dossier-top {
   display: flex;
   align-items: center;
@@ -591,7 +605,11 @@ html, body {
 }
 .dossier-flag::before { content: "[!] "; }
 
+/* Firefox 3D transform hit-test fix: translateZ(1px) pushes the button clear of 3D matrix */
 .dossier-close {
+  position: relative;
+  z-index: 20;
+  transform: translateZ(1px);
   background: none;
   border: 1px solid var(--line);
   color: var(--fg-dim);
@@ -600,6 +618,7 @@ html, body {
   letter-spacing: 0.04em;
   padding: 0.2rem 0.5rem;
   cursor: pointer;
+  pointer-events: auto;
   touch-action: manipulation;
 }
 
@@ -621,7 +640,7 @@ html, body {
   --bg-behind: #050706;
   position: relative;
   flex: 1 1 auto;
-  min-height: 9rem;
+  min-height: 8rem;
   width: 100%;
   background: #050706;
   padding: 0;
@@ -659,19 +678,19 @@ html, body {
   bottom: 0;
   z-index: 2;
   text-align: center;
-  font-size: 0.52rem;
+  font-size: 0.48rem;
   letter-spacing: 0.1em;
   color: var(--fg);
   background: rgba(5, 7, 6, 0.78);
-  padding: 0.28rem 0.4rem;
+  padding: 0.2rem 0.4rem;
 }
 
 .dossier-footer {
   flex: 0 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 0.7rem;
-  padding: 0.85rem 0.5rem 0.2rem;
+  gap: 0.5rem;
+  padding: 0.6rem 0.5rem 0.2rem;
   border-top: 1px solid var(--line);
 }
 
@@ -681,10 +700,10 @@ html, body {
 
 .dossier-eyebrow {
   display: block;
-  font-size: 0.6rem;
+  font-size: 0.55rem;
   letter-spacing: 0.16em;
   color: var(--fg-dim);
-  margin-bottom: 0.3rem;
+  margin-bottom: 0.2rem;
 }
 .dossier-eyebrow::before { content: "> "; color: var(--accent); }
 
@@ -694,7 +713,7 @@ html, body {
   white-space: nowrap;
   border-right: 2px solid var(--accent);
   margin: 0;
-  font-size: clamp(1rem, 2.4vw, 1.25rem);
+  font-size: clamp(0.9rem, 2vw, 1.1rem);
   font-weight: 600;
   color: var(--fg);
   animation: type-in 0.5s steps(var(--len, 12)) both;
@@ -706,8 +725,8 @@ html, body {
 }
 
 .dossier-subject {
-  margin-top: 0.35rem;
-  font-size: 0.7rem;
+  margin-top: 0.25rem;
+  font-size: 0.65rem;
   color: var(--fg-dim);
 }
 .dossier-subject::before { content: "SUBJECT · "; color: var(--line); }
@@ -724,11 +743,11 @@ html, body {
 
 .field-label {
   flex-shrink: 0;
-  width: 6.4rem;
-  padding: 0.5rem 0.55rem;
+  width: 5.5rem;
+  padding: 0.4rem 0.5rem;
   background: var(--line-soft);
   color: var(--accent);
-  font-size: 0.58rem;
+  font-size: 0.52rem;
   letter-spacing: 0.05em;
   border-right: 1px dashed var(--line-soft);
 }
@@ -736,14 +755,14 @@ html, body {
 
 .field-value {
   flex: 1;
-  padding: 0.5rem 0.6rem;
-  font-size: 0.78rem;
+  padding: 0.4rem 0.5rem;
+  font-size: 0.7rem;
   color: var(--fg);
 }
 
 .field-row--note .field-value {
   color: var(--fg-dim);
-  font-size: 0.72rem;
+  font-size: 0.65rem;
 }
 .field-row--note .field-value::before { content: "// "; color: var(--line); }
 
@@ -751,7 +770,7 @@ html, body {
   display: flex;
   justify-content: space-between;
   border-top: 1px solid var(--line);
-  padding: 0.5rem 0.7rem;
+  padding: 0.4rem 0.7rem;
 }
 
 .nav-btn {
@@ -759,9 +778,9 @@ html, body {
   border: 1px solid var(--line);
   color: var(--fg-dim);
   font-family: "IBM Plex Mono", monospace;
-  font-size: 0.64rem;
+  font-size: 0.6rem;
   letter-spacing: 0.03em;
-  padding: 0.3rem 0.65rem;
+  padding: 0.25rem 0.6rem;
   cursor: pointer;
   touch-action: manipulation;
 }

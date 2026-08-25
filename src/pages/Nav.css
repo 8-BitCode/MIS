@@ -1,0 +1,269 @@
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&display=swap");
+
+/* ══════════════════════════════════════════════════════════════════
+   SITE-NAV — shared across every page. Same tokens as Committee.css
+   so switching pages never breaks the illusion of one system.
+   ══════════════════════════════════════════════════════════════════ */
+
+.site-nav {
+  --bg: #07090a;
+  --panel: #0d1110;
+  --line: #24302c;
+  --line-soft: #182420;
+  --fg: #cdd8d2;
+  --fg-dim: #5e6d67;
+  --accent: #3ddc84;
+  --flag: #ff5a4e;
+
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  font-family: "IBM Plex Mono", monospace;
+  background: rgba(7, 9, 10, 0.82);
+  backdrop-filter: blur(6px) saturate(1.1);
+  -webkit-backdrop-filter: blur(6px) saturate(1.1);
+  border-bottom: 1px solid var(--line-soft);
+  transition: border-color 0.3s ease, background 0.3s ease;
+}
+
+.site-nav.is-sealed {
+  border-bottom-color: var(--line);
+  background: rgba(7, 9, 10, 0.94);
+}
+
+.site-nav-bar {
+  max-width: 78rem;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 0.7rem 1.25rem;
+}
+
+/* ── Brand mark ─────────────────────────────────────────────────── */
+.site-nav-brand {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  text-decoration: none;
+  margin-right: 0.5rem;
+  flex-shrink: 0;
+}
+
+.brand-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--flag);
+  box-shadow: 0 0 6px var(--flag);
+  animation: brand-blink 2.4s ease-in-out infinite;
+  transform: translateY(-1px);
+}
+
+@keyframes brand-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.25; }
+}
+
+.brand-code {
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--fg);
+}
+
+.brand-sub {
+  font-size: 0.6rem;
+  letter-spacing: 0.08em;
+  color: var(--fg-dim);
+}
+
+/* ── Desktop links ──────────────────────────────────────────────── */
+.site-nav-links {
+  display: flex;
+  align-items: center;
+  gap: 0.15rem;
+  flex: 1;
+}
+
+.site-nav-link {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.4rem 0.6rem;
+  text-decoration: none;
+  color: var(--fg-dim);
+  font-size: 0.68rem;
+  letter-spacing: 0.05em;
+  border: 1px solid transparent;
+  transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+}
+
+.site-nav-link .link-code {
+  color: var(--line);
+  font-size: 0.6rem;
+}
+
+.site-nav-link:hover {
+  color: var(--fg);
+  border-color: var(--line);
+}
+
+.site-nav-link:hover .link-code {
+  color: var(--accent);
+}
+
+.site-nav-link.is-active {
+  color: var(--bg);
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.site-nav-link.is-active .link-code {
+  color: rgba(7, 9, 10, 0.6);
+}
+
+/* underline sweep on hover, off when active (already filled) */
+.site-nav-link::after {
+  content: "";
+  position: absolute;
+  left: 0.6rem;
+  right: 0.6rem;
+  bottom: 2px;
+  height: 1px;
+  background: var(--accent);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.2s ease;
+}
+
+.site-nav-link:hover::after {
+  transform: scaleX(1);
+}
+
+.site-nav-link.is-active::after {
+  display: none;
+}
+
+/* ── Status readout ─────────────────────────────────────────────── */
+.site-nav-status {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.6rem;
+  letter-spacing: 0.08em;
+  color: var(--fg-dim);
+  flex-shrink: 0;
+}
+
+.status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 5px var(--accent);
+  animation: brand-blink 1.6s ease-in-out infinite;
+}
+
+/* ── Mobile toggle ──────────────────────────────────────────────── */
+.site-nav-toggle {
+  display: none;
+  background: none;
+  border: 1px solid var(--line);
+  color: var(--fg-dim);
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.05em;
+  padding: 0.35rem 0.6rem;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.site-nav-toggle:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+/* ── Mobile drawer ──────────────────────────────────────────────── */
+.site-nav-drawer {
+  max-height: 0;
+  overflow: hidden;
+  border-top: 1px solid transparent;
+  transition: max-height 0.3s ease, border-color 0.3s ease;
+}
+
+.site-nav-drawer.is-open {
+  max-height: 20rem;
+  border-top-color: var(--line-soft);
+}
+
+.site-nav-drawer ul {
+  list-style: none;
+  margin: 0;
+  padding: 0.4rem 1.25rem 0.8rem;
+}
+
+.drawer-link {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 0.2rem;
+  text-decoration: none;
+  color: var(--fg-dim);
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  border-bottom: 1px dashed var(--line-soft);
+}
+
+.drawer-link .link-code {
+  color: var(--line);
+  font-size: 0.65rem;
+}
+
+.drawer-link .link-label {
+  flex: 1;
+}
+
+.drawer-link .link-arrow {
+  opacity: 0;
+  color: var(--accent);
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  transform: translateX(-4px);
+}
+
+.drawer-link:hover,
+.drawer-link.is-active {
+  color: var(--fg);
+}
+
+.drawer-link.is-active {
+  color: var(--accent);
+}
+
+.drawer-link:hover .link-arrow,
+.drawer-link.is-active .link-arrow {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+@media (max-width: 52rem) {
+  .site-nav-links,
+  .site-nav-status {
+    display: none;
+  }
+  .site-nav-toggle {
+    display: inline-block;
+    margin-left: auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .brand-dot,
+  .status-dot {
+    animation: none !important;
+  }
+  .site-nav-drawer {
+    transition: none !important;
+  }
+}

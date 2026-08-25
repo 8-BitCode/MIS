@@ -1,0 +1,60 @@
+/* Apply the base tactical cursor globally */
+body {
+  cursor: crosshair;
+}
+
+/* ── HUD Tactical Crosshair (Follows Cursor) ───────────────────── */
+.hud-crosshair {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 32px;
+  height: 32px;
+  margin: -16px 0 0 -16px;
+  pointer-events: none;
+  z-index: 99999; /* Ensure it stays above all other UI elements */
+  transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1), height 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  mix-blend-mode: difference;
+}
+
+.xhair-x, .xhair-y {
+  position: absolute;
+  background: #3ddc84; /* var(--accent) */
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  opacity: 0.6;
+  transition: width 0.2s ease, height 0.2s ease, opacity 0.2s ease;
+}
+
+.xhair-x { width: 100%; height: 1px; }
+.xhair-y { width: 1px; height: 100%; }
+
+.xhair-box {
+  position: absolute;
+  inset: -4px;
+  border: 1px solid #3ddc84;
+  opacity: 0;
+  transform: scale(0.8) rotate(45deg);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.hud-crosshair.is-locked {
+  width: 48px;
+  height: 48px;
+}
+
+.hud-crosshair.is-locked .xhair-x, 
+.hud-crosshair.is-locked .xhair-y {
+  width: 40%; height: 40%; opacity: 1;
+}
+
+.hud-crosshair.is-locked .xhair-box {
+  opacity: 0.8;
+  transform: scale(1) rotate(0deg);
+}
+
+/* Hide on mobile devices to prevent touch conflicts */
+@media (hover: none) and (pointer: coarse) {
+  .hud-crosshair { display: none; }
+  body { cursor: auto; }
+}

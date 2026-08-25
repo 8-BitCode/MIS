@@ -5,9 +5,13 @@ import Committee from "./pages/Committee";
 import Events from "./pages/Events";
 import Partnerships from "./pages/Partnerships";
 import Contact from "./pages/Contact";
+import TacticalCursor from "./components/TacticalCursor"; // <-- Import the cursor
 
 export default () => (
   <BrowserRouter>
+    {/* Mount the cursor globally above all routes */}
+    <TacticalCursor />
+    
     <Routes>
       <Route path="/" element={<Home />} />
       <Route path="/committee" element={<Committee />} />
