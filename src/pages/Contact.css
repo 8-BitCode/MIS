@@ -23,7 +23,6 @@
   color: var(--fg);
   font-family: "IBM Plex Mono", monospace;
   padding: 2.5rem 2vw 3rem;
-  overflow-x: hidden;
 }
 
 .relay-page * { box-sizing: border-box; }
