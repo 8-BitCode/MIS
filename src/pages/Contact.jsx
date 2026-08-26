@@ -244,6 +244,10 @@ export default function Contact() {
   const [dragging, setDragging] = useState(false);
   const [viewMode, setViewMode] = useState("3d");
   
+  // Transmitter state
+  const [isHoveringNode, setIsHoveringNode] = useState(false);
+  const [signalBurst, setSignalBurst] = useState(false);
+  
   // Sequence State
   const [transmittingNode, setTransmittingNode] = useState(null);
   const [seqProgress, setSeqProgress] = useState(0);
@@ -266,6 +270,7 @@ export default function Contact() {
   const readoutRef = useRef(null);
   const redirectTimerRef = useRef(null);
   const animFrameRef = useRef(null);
+  const burstTimerRef = useRef(null);
 
   const reducedMotion = useMatchMedia("(prefers-reduced-motion: reduce)");
   const supportsHover = useMatchMedia("(hover: hover) and (pointer: fine)");
@@ -285,9 +290,21 @@ export default function Contact() {
     return () => cancelAnimationFrame(raf);
   }, [reducedMotion, dragging, activeId, transmittingNode]);
 
+  // ── Signal burst effect ──────────────────────────────────────────
+  const triggerSignalBurst = useCallback(() => {
+    setSignalBurst(true);
+    if (burstTimerRef.current) clearTimeout(burstTimerRef.current);
+    burstTimerRef.current = setTimeout(() => {
+      setSignalBurst(false);
+    }, 800);
+  }, []);
+
   // ── Uplink Broadcast Sequence ──────────────────────────────────────
   const triggerUplinkSequence = useCallback((channel) => {
     if (!channel || !channel.href || channel.dormant) return;
+
+    // Trigger the signal burst effect
+    triggerSignalBurst();
 
     playDossierOpen();
     setActiveId(channel.id);
@@ -327,12 +344,13 @@ export default function Contact() {
     };
 
     animFrameRef.current = requestAnimationFrame(updateSequence);
-  }, [theta, playDossierOpen, reducedMotion]);
+  }, [theta, playDossierOpen, reducedMotion, triggerSignalBurst]);
 
   useEffect(() => {
     return () => {
       if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
       if (redirectTimerRef.current) clearTimeout(redirectTimerRef.current);
+      if (burstTimerRef.current) clearTimeout(burstTimerRef.current);
     };
   }, []);
 
@@ -407,6 +425,25 @@ export default function Contact() {
     [playPinThud]
   );
 
+  const handleNodeHover = useCallback((c) => {
+    if (!c.dormant && !transmittingNode) {
+      setIsHoveringNode(true);
+      if (supportsHover) focusChannel(c.id);
+    }
+  }, [supportsHover, transmittingNode, focusChannel]);
+
+  const handleNodeLeave = useCallback(() => {
+    setIsHoveringNode(false);
+    if (supportsHover && !transmittingNode) {
+      // Don't clear immediately to allow smooth transition
+      setTimeout(() => {
+        if (!document.querySelector('.node-chip:hover')) {
+          // Keep the active ID if it's not being hovered
+        }
+      }, 100);
+    }
+  }, [supportsHover, transmittingNode]);
+
   const handleNodeClick = useCallback(
     (c) => (e) => {
       e.preventDefault();
@@ -477,6 +514,9 @@ export default function Contact() {
 
   const bearing = Math.round((((theta * 180) / Math.PI) % 360 + 360) % 360);
 
+  // Calculate charge level based on hover state
+  const chargeLevel = isHoveringNode && !transmittingNode ? 1 : 0;
+
   return (
     <>
       <Nav />
@@ -543,6 +583,85 @@ export default function Contact() {
                         </circle>
                       ))}
                     </g>
+
+                    {/* ── Signal Burst Effect ── */}
+                    {signalBurst && (
+                      <g className="signal-burst" style={{ 
+                        opacity: 1,
+                        animation: 'burst-fade 0.8s ease-out forwards'
+                      }}>
+                        {[0, 1, 2, 3, 4, 5, 6, 7].map((i) => {
+                          const angle = (i / 8) * Math.PI * 2;
+                          const radius = 30 + i * 8;
+                          return (
+                            <circle
+                              key={i}
+                              cx={hubGeom.top.x + Math.cos(angle) * radius * 0.5}
+                              cy={hubGeom.top.y + Math.sin(angle) * radius * 0.5}
+                              r={3 + i * 1.5}
+                              fill="none"
+                              stroke={i % 2 === 0 ? '#39d0ff' : '#ffcf5c'}
+                              strokeWidth={1.5 - i * 0.15}
+                              opacity={0.8 - i * 0.08}
+                              style={{
+                                animation: `burst-wave ${0.6 + i * 0.05}s ease-out forwards`,
+                                transform: `scale(${1 + i * 0.15})`,
+                              }}
+                            />
+                          );
+                        })}
+                        {/* Concentric rings */}
+                        {[1, 2, 3].map((i) => (
+                          <circle
+                            key={`ring-${i}`}
+                            cx={hubGeom.top.x}
+                            cy={hubGeom.top.y}
+                            r={i * 20}
+                            fill="none"
+                            stroke="#39d0ff"
+                            strokeWidth={1.5 - i * 0.3}
+                            opacity={0.6 - i * 0.15}
+                            style={{
+                              animation: `burst-ring ${0.4 + i * 0.1}s ease-out forwards`,
+                            }}
+                          />
+                        ))}
+                        {/* Central flash */}
+                        <circle
+                          cx={hubGeom.top.x}
+                          cy={hubGeom.top.y}
+                          r={8}
+                          fill="#fff"
+                          opacity={0.9}
+                          style={{
+                            animation: 'burst-flash 0.3s ease-out forwards',
+                          }}
+                        />
+                        <style dangerouslySetInnerHTML={{
+                          __html: `
+                            @keyframes burst-ring {
+                              0% { transform: scale(0.3); opacity: 0; }
+                              30% { opacity: 0.8; }
+                              100% { transform: scale(1.5); opacity: 0; }
+                            }
+                            @keyframes burst-wave {
+                              0% { transform: scale(0.5); opacity: 0; }
+                              20% { opacity: 1; }
+                              100% { transform: scale(2); opacity: 0; }
+                            }
+                            @keyframes burst-flash {
+                              0% { transform: scale(0.5); opacity: 0; }
+                              50% { transform: scale(1.5); opacity: 1; }
+                              100% { transform: scale(0.8); opacity: 0.3; }
+                            }
+                            @keyframes burst-fade {
+                              0% { opacity: 1; }
+                              100% { opacity: 0; }
+                            }
+                          `
+                        }} />
+                      </g>
+                    )}
 
                     {transmittingNode && activeNodeGeom && seqProgress < SEQ_HANDSHAKE && (
                       <g
@@ -617,12 +736,123 @@ export default function Contact() {
                     )}
                   </svg>
 
-                  <div className="hub-core" style={{ left: `${(hubGeom.top.x / LOGICAL_W) * 100}%`, top: `${(hubGeom.top.y / LOGICAL_H) * 100}%` }}>
-                    <span className="hub-ring hub-ring--1" aria-hidden="true" />
-                    <span className="hub-ring hub-ring--2" aria-hidden="true" />
-                    <span className="hub-sweep" aria-hidden="true" />
-                    <span className="hub-label">M.I.S.<br />RELAY</span>
+                  {/* ── Transmitter with Charge Effect ── */}
+                  <div 
+                    className="signal-transmitter"
+                    style={{ 
+                      position: 'absolute',
+                      left: `${(hubGeom.top.x / LOGICAL_W) * 100}%`, 
+                      top: `${(hubGeom.top.y / LOGICAL_H) * 100}%`,
+                      transform: 'translate(-50%, -100%)',
+                      zIndex: 3,
+                      pointerEvents: 'none',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      gap: '1px',
+                    }}
+                  >
+                    {/* Charge ring */}
+                    <div style={{
+                      position: 'absolute',
+                      width: '40px',
+                      height: '40px',
+                      borderRadius: '50%',
+                      border: `2px solid ${chargeLevel > 0 ? 'rgba(57, 208, 255, 0.6)' : 'rgba(57, 208, 255, 0.1)'}`,
+                      top: '50%',
+                      left: '50%',
+                      transform: `translate(-50%, -50%) scale(${1 + chargeLevel * 0.3})`,
+                      opacity: 0.2 + chargeLevel * 0.5,
+                      transition: 'all 0.3s ease',
+                      boxShadow: chargeLevel > 0 ? '0 0 30px rgba(57, 208, 255, 0.2)' : 'none',
+                    }} />
+                    
+                    {/* Antenna mast with charge glow */}
+                    <div style={{
+                      width: '2px',
+                      height: `${12 + chargeLevel * 8}px`,
+                      background: chargeLevel > 0 
+                        ? `linear-gradient(to top, #39d0ff, ${chargeLevel > 0.5 ? '#ffcf5c' : '#39d0ff'})`
+                        : '#39d0ff',
+                      boxShadow: chargeLevel > 0 
+                        ? `0 0 ${15 + chargeLevel * 15}px rgba(57, 208, 255, ${0.3 + chargeLevel * 0.4})`
+                        : '0 0 8px rgba(57, 208, 255, 0.3)',
+                      borderRadius: '1px',
+                      transition: 'all 0.3s ease',
+                    }} />
+                    
+                    {/* Signal dot / emitter with charge state */}
+                    <div style={{
+                      width: `${6 + chargeLevel * 4}px`,
+                      height: `${6 + chargeLevel * 4}px`,
+                      borderRadius: '50%',
+                      background: chargeLevel > 0.7 
+                        ? 'radial-gradient(circle at 50% 50%, #ffcf5c, #39d0ff)'
+                        : chargeLevel > 0 
+                          ? 'radial-gradient(circle at 50% 50%, #39d0ff, #39d0ff)'
+                          : '#39d0ff',
+                      boxShadow: chargeLevel > 0 
+                        ? `0 0 ${20 + chargeLevel * 20}px rgba(57, 208, 255, ${0.4 + chargeLevel * 0.5})`
+                        : '0 0 12px rgba(57, 208, 255, 0.5)',
+                      animation: chargeLevel > 0 
+                        ? 'transmitter-charge 0.8s ease-in-out infinite' 
+                        : 'transmitter-pulse 2s ease-in-out infinite',
+                      transition: 'all 0.3s ease',
+                    }} />
+                    
+                    {/* Small base plate */}
+                    <div style={{
+                      width: `${14 + chargeLevel * 4}px`,
+                      height: '3px',
+                      background: chargeLevel > 0 
+                        ? 'rgba(57, 208, 255, 0.3)' 
+                        : 'rgba(31, 47, 49, 0.8)',
+                      border: `1px solid ${chargeLevel > 0 ? 'rgba(57, 208, 255, 0.4)' : 'rgba(57, 208, 255, 0.15)'}`,
+                      borderRadius: '1px',
+                      marginTop: '1px',
+                      transition: 'all 0.3s ease',
+                    }} />
+                    
+                    {/* Tiny label */}
+                    <span style={{
+                      fontSize: '0.35rem',
+                      letterSpacing: '0.08em',
+                      color: chargeLevel > 0 
+                        ? 'rgba(57, 208, 255, 0.8)' 
+                        : 'rgba(205, 216, 210, 0.3)',
+                      marginTop: '2px',
+                      fontFamily: '"IBM Plex Mono", monospace',
+                      transition: 'all 0.3s ease',
+                    }}>
+                      {chargeLevel > 0 ? '⚡ CHARGING' : 'RELAY'}
+                    </span>
                   </div>
+
+                  {/* Add the animations to CSS via style tag */}
+                  <style dangerouslySetInnerHTML={{
+                    __html: `
+                      @keyframes transmitter-pulse {
+                        0%, 100% { 
+                          opacity: 1;
+                          transform: scale(1);
+                        }
+                        50% { 
+                          opacity: 0.6;
+                          transform: scale(0.85);
+                        }
+                      }
+                      @keyframes transmitter-charge {
+                        0%, 100% { 
+                          transform: scale(1);
+                          box-shadow: 0 0 20px rgba(57, 208, 255, 0.6);
+                        }
+                        50% { 
+                          transform: scale(1.15);
+                          box-shadow: 0 0 40px rgba(57, 208, 255, 0.9), 0 0 60px rgba(255, 207, 92, 0.3);
+                        }
+                      }
+                    `
+                  }} />
 
                   <ul className="node-list" aria-label="Contact channels">
                     {allNodes.map((c, idx) => {
@@ -634,8 +864,10 @@ export default function Contact() {
                           <button
                             type="button"
                             className={`node-chip ascii-box ${c.priority ? "is-priority" : ""} ${c.dormant ? "node-chip--dormant" : ""} ${isActive ? "is-active" : ""} ${isTransmittingThis ? "is-routing" : ""}`}
-                            onMouseEnter={!c.dormant ? () => { if (supportsHover && !transmittingNode) focusChannel(c.id); } : undefined}
-                            onMouseLeave={!c.dormant ? () => { if (supportsHover && !transmittingNode) clearChannel(c.id); } : undefined}
+                            onMouseEnter={() => handleNodeHover(c)}
+                            onMouseLeave={handleNodeLeave}
+                            onFocus={() => handleNodeHover(c)}
+                            onBlur={handleNodeLeave}
                             onClick={handleNodeClick(c)}
                           >
                             <AsciiCorners />
