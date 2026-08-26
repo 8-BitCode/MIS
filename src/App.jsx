@@ -5,10 +5,14 @@ import Committee from "./pages/Committee";
 import Events from "./pages/Events";
 import Partnerships from "./pages/Partnerships";
 import Contact from "./pages/Contact";
-import TacticalCursor from "./components/TacticalCursor"; // <-- Import the cursor
+import TacticalCursor from "./components/TacticalCursor";
+import ScrollToTop from "./components/ScrollToTop"; // <-- Import ScrollToTop
 
 export default () => (
   <BrowserRouter>
+    {/* Scroll to top on route change */}
+    <ScrollToTop />
+    
     {/* Mount the cursor globally above all routes */}
     <TacticalCursor />
     
