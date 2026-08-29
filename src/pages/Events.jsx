@@ -6,12 +6,13 @@ import Nav from "./Nav";
 // GOOGLE CALENDAR CONFIG
 // ──────────────────────────────────────────────────────────────────
 const CALENDAR_CONFIG = {
-  apiKey: "AIzaSyCRm_15mTh7zLHv3zeXGQSzy-CE3t3-rtY",
-  calendarId: "cc21935444bd2bdb7709b5c46b309079f26a74831cadc248117961c2b6936f32@group.calendar.google.com",
+  apiKey: "AIzaSyB89Xs2unB2zgJgfrp0b9hcbJyBDn_rGwE",
+  calendarId: "c_23fe893822771c20d4b8cc3a395d9a5aaf39d7e1767e2dd596d0989355ebca48@group.calendar.google.com",
   maxResults: 250,
   refreshMinutes: 15,
-  monthsBack: 6,
+  monthsBack: 24,
   monthsForward: 12,
+  archiveLimit: 5, // show the last N past events in the After-Action Archive
 };
 
 const CALENDAR_NOT_CONFIGURED =
@@ -39,15 +40,20 @@ const Placeholder = React.memo(({ children }) => (
 ));
 
 const Slide = React.memo(({ event }) => {
-  const [failed, setFailed] = useState(false);
-  
-  if (event.image && !failed) {
+  const [attempt, setAttempt] = useState(0); // 0 = primary URL, 1 = fallback URL, 2 = gave up
+  const img = event.image;
+  const src = img ? (attempt === 0 ? img.primary : img.fallback) : null;
+
+  if (src && attempt < 2) {
     return (
       <img
-        src={event.image}
+        src={src}
         alt={event.title}
         className="slide-img"
-        onError={() => setFailed(true)}
+        onError={() => {
+          if (attempt === 0 && img.fallback) setAttempt(1);
+          else setAttempt(2);
+        }}
       />
     );
   }
@@ -125,9 +131,16 @@ function getEventImage(event) {
   const image = attachments.find((a) => (a.mimeType || "").startsWith("image/"));
   if (!image) return null;
   if (image.fileId) {
-    return `https://drive.google.com/thumbnail?id=${image.fileId}&sz=w1000`;
+    return {
+      primary: `https://drive.google.com/thumbnail?id=${image.fileId}&sz=w1000`,
+      // Alternate host — occasionally succeeds when the thumbnail endpoint
+      // above fails, though both still require the Drive file to be
+      // shared "Anyone with the link" to load without a Google sign-in.
+      fallback: `https://lh3.googleusercontent.com/d/${image.fileId}=w1000`,
+    };
   }
-  return image.fileUrl || null;
+  if (image.fileUrl) return { primary: image.fileUrl, fallback: null };
+  return null;
 }
 
 function dateKey(d) {
@@ -277,7 +290,12 @@ export default function Events() {
   const upcomingOps = useMemo(() => ops.filter((op) => op.dayKey >= todayKey), [ops, todayKey]);
 
   const pastOps = useMemo(
-    () => ops.filter((op) => op.dayKey < todayKey).slice().reverse(),
+    () =>
+      ops
+        .filter((op) => op.dayKey < todayKey)
+        .slice()
+        .reverse()
+        .slice(0, CALENDAR_CONFIG.archiveLimit), // last N (or fewer, if fewer exist)
     [ops, todayKey]
   );
 

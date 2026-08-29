@@ -432,17 +432,20 @@ export default function Contact() {
     }
   }, [supportsHover, transmittingNode, focusChannel]);
 
-  const handleNodeLeave = useCallback(() => {
+  const handleNodeLeave = useCallback((c) => {
     setIsHoveringNode(false);
     if (supportsHover && !transmittingNode) {
-      // Don't clear immediately to allow smooth transition
+      // Give the pointer a beat to land on another node before clearing,
+      // so hopping between adjacent nodes doesn't flicker the readout —
+      // but if nothing is hovered anymore, release the active channel
+      // so auto-rotation resumes.
       setTimeout(() => {
         if (!document.querySelector('.node-chip:hover')) {
-          // Keep the active ID if it's not being hovered
+          clearChannel(c.id);
         }
       }, 100);
     }
-  }, [supportsHover, transmittingNode]);
+  }, [supportsHover, transmittingNode, clearChannel]);
 
   const handleNodeClick = useCallback(
     (c) => (e) => {
@@ -744,7 +747,7 @@ export default function Contact() {
                       left: `${(hubGeom.top.x / LOGICAL_W) * 100}%`, 
                       top: `${(hubGeom.top.y / LOGICAL_H) * 100}%`,
                       transform: 'translate(-50%, -100%)',
-                      zIndex: 3,
+                      zIndex: 20,
                       pointerEvents: 'none',
                       display: 'flex',
                       flexDirection: 'column',
@@ -865,9 +868,9 @@ export default function Contact() {
                             type="button"
                             className={`node-chip ascii-box ${c.priority ? "is-priority" : ""} ${c.dormant ? "node-chip--dormant" : ""} ${isActive ? "is-active" : ""} ${isTransmittingThis ? "is-routing" : ""}`}
                             onMouseEnter={() => handleNodeHover(c)}
-                            onMouseLeave={handleNodeLeave}
+                            onMouseLeave={() => handleNodeLeave(c)}
                             onFocus={() => handleNodeHover(c)}
-                            onBlur={handleNodeLeave}
+                            onBlur={() => handleNodeLeave(c)}
                             onClick={handleNodeClick(c)}
                           >
                             <AsciiCorners />

@@ -9,7 +9,7 @@
 html, body {
   margin: 0;
   padding: 0;
-  background: #07090a;
+  background: #0a0805;
 }
 
 /* Lock viewport ONLY when the Committee roster page is active */
@@ -21,14 +21,14 @@ body:has(.roster-page) {
 }
 
 .roster-page {
-  --bg: #07090a;
-  --panel: #0d1110;
-  --line: #24302c;
-  --line-soft: #182420;
-  --fg: #cdd8d2;
-  --fg-dim: #5e6d67;
-  --accent: #3ddc84;
-  --accent-dim: #1c4d33;
+  --bg: #0a0805;
+  --panel: #14100a;
+  --line: #3d2f1a;
+  --line-soft: #241c10;
+  --fg: #e8dcc8;
+  --fg-dim: #8a7a60;
+  --accent: #ffb454;
+  --accent-dim: #6b4a1c;
   --flag: #ff5a4e;
 
   height: 100vh;
@@ -374,7 +374,7 @@ body:has(.roster-page) {
   width: 100%;
   aspect-ratio: 1 / 1.15;
   overflow: hidden;
-  background: #050706;
+  background: #0d0a05;
 }
 
 .pin-photo-frame .portrait-img,
@@ -555,9 +555,9 @@ body:has(.roster-page) {
   background: linear-gradient(
     180deg,
     transparent 0%,
-    rgba(61, 220, 132, 0) 30%,
-    rgba(61, 220, 132, 0.35) 50%,
-    rgba(61, 220, 132, 0) 70%,
+    rgba(255, 180, 84, 0) 30%,
+    rgba(255, 180, 84, 0.35) 50%,
+    rgba(255, 180, 84, 0) 70%,
     transparent 100%
   );
   mix-blend-mode: screen;
@@ -636,12 +636,12 @@ body:has(.roster-page) {
 }
 
 .dossier-portrait-frame {
-  --bg-behind: #050706;
+  --bg-behind: #0d0a05;
   position: relative;
   flex: 1 1 auto;
   min-height: 8rem;
   width: 100%;
-  background: #050706;
+  background: #0d0a05;
   padding: 0;
 }
 

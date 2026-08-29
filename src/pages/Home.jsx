@@ -41,25 +41,38 @@ const CASE_FILES = [
     to: "/committee",
     title: "COMMITTEE",
     blurb: "Meet the operatives running the society — roles, units, and personnel files.",
+    accent: "var(--accent-committee)",
   },
   {
     code: "02",
     to: "/events",
     title: "EVENTS",
     blurb: "Upcoming briefings, socials, and workshops. Clearance: open to all members.",
+    accent: "var(--accent-events)",
   },
   {
     code: "03",
     to: "/partnerships",
     title: "PARTNERSHIPS",
     blurb: "Sponsors and allied organizations backing the mission.",
+    accent: "var(--accent-partnerships)",
   },
   {
     code: "04",
     to: "/contact",
     title: "CONTACT",
     blurb: "Open a channel. Questions, sponsorships, or requests to join.",
+    accent: "var(--accent-contact)",
   },
+];
+
+// Cycle the four section accents across the stat tiles so the grid
+// visually "mixes" every page's colour scheme.
+const STAT_ACCENTS = [
+  "var(--accent-committee)",
+  "var(--accent-events)",
+  "var(--accent-partnerships)",
+  "var(--accent-contact)",
 ];
 
 function useScrollReveal() {
@@ -323,7 +336,11 @@ export default function Home() {
 
           <div className="stats-grid">
             {STATS.map((s, idx) => (
-              <Declassify key={s.code} style={{ '--stagger': idx }} className="stat-card ascii-box">
+              <Declassify
+                key={s.code}
+                style={{ '--stagger': idx, '--stat-accent': STAT_ACCENTS[idx % STAT_ACCENTS.length] }}
+                className="stat-card ascii-box"
+              >
                 <AsciiCorners />
                 <span className="stat-code">N-{s.code}</span>
                 <span className="stat-value">{s.value}</span>
@@ -352,7 +369,7 @@ export default function Home() {
                 key={c.to}
                 to={c.to}
                 className="case-card ascii-box staggered-slide"
-                style={{ '--stagger': idx }}
+                style={{ '--stagger': idx, '--card-accent': c.accent }}
                 onClick={() => playDossierOpen()}
               >
                 <AsciiCorners />

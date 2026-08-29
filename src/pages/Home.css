@@ -16,6 +16,13 @@
   --accent-dim: #1c4d33;
   --flag: #ff5a4e;
 
+  /* Borrowed accents from each section's dossier — Home is the hub,
+     so it wears a little of every page's colour scheme. */
+  --accent-committee: #ffb454;    /* amber — matches Committee.sys */
+  --accent-events: #b47bff;       /* violet — matches Events.sys */
+  --accent-partnerships: #00ff66; /* matrix green — matches Partnerships.sys */
+  --accent-contact: #39d0ff;      /* cyan — matches Contact.sys */
+
   position: relative;
   min-height: 100vh;
   background: var(--bg);
@@ -722,12 +729,12 @@ body:has(.home-page)::-webkit-scrollbar {
 .case-card:hover {
   background: var(--line-soft);
   transform: translateY(-2px);
-  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5), inset 3px 0 0 var(--card-accent, var(--accent));
   z-index: 3;
 }
 
 .case-card:hover .ascii-corner {
-  color: var(--accent);
+  color: var(--card-accent, var(--accent));
 }
 
 /* Staggered Index cards on scroll in */
@@ -755,7 +762,7 @@ body:has(.home-page)::-webkit-scrollbar {
 
 .case-open {
   opacity: 0;
-  color: var(--accent);
+  color: var(--card-accent, var(--accent));
   transition: opacity 0.2s ease, transform 0.2s ease;
   transform: translateX(-6px);
 }
@@ -784,8 +791,8 @@ body:has(.home-page)::-webkit-scrollbar {
 .case-scanner-line {
   position: absolute;
   top: -20%; left: 0; right: 0; height: 1px;
-  background: var(--accent);
-  box-shadow: 0 0 10px var(--accent);
+  background: var(--card-accent, var(--accent));
+  box-shadow: 0 0 10px var(--card-accent, var(--accent));
   opacity: 0;
   pointer-events: none;
   transition: top 0s, opacity 0.1s;

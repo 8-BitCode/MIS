@@ -14,6 +14,7 @@
   --accent: #00ff66; /* Classic Cyberpunk Green */
   --accent-dim: #00441b;
   --flag: #ff3333;
+  --popular: #ffcf5c; /* Gold — marks the recommended tier, distinct from hover/selection green */
 
   min-height: 100vh;
   background: var(--bg);
@@ -205,11 +206,12 @@
   gap: 1.25rem;
   margin-bottom: 2.5rem;
 }
-.tier-card { padding: 1.25rem; display: flex; flex-direction: column; cursor: pointer; transition: border-color 0.2s ease; }
+.tier-card { padding: 1.25rem; display: flex; flex-direction: column; cursor: pointer; transition: border-color 0.2s ease, box-shadow 0.2s ease; }
 .tier-card:hover { border-color: var(--fg-dim); }
 .tier-card.is-selected { border-color: var(--accent); box-shadow: inset 0 0 15px rgba(0, 255, 102, 0.1); }
-.tier-card.is-popular { border-color: var(--accent); }
-.popular-badge { font-size: 0.52rem; color: #000; background: var(--accent); padding: 0.1rem 0.4rem; align-self: flex-start; margin-bottom: 0.5rem; font-weight: bold; }
+.tier-card.is-popular { border-color: var(--popular); }
+.tier-card.is-popular:hover { border-color: var(--popular); box-shadow: inset 0 0 0 2px var(--fg-dim); }
+.popular-badge { font-size: 0.52rem; color: #000; background: var(--popular); padding: 0.1rem 0.4rem; align-self: flex-start; margin-bottom: 0.5rem; font-weight: bold; }
 .tier-code { font-size: 0.6rem; color: var(--fg-dim); }
 .tier-name { margin: 0.2rem 0; font-size: 1.1rem; color: #fff; font-weight: 700; }
 .tier-price { font-size: 0.85rem; color: var(--accent); font-weight: 600; margin-bottom: 0.8rem; }
