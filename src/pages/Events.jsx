@@ -50,6 +50,7 @@ const Slide = React.memo(({ event }) => {
         src={src}
         alt={event.title}
         className="slide-img"
+        referrerPolicy="no-referrer"
         onError={() => {
           if (attempt === 0 && img.fallback) setAttempt(1);
           else setAttempt(2);
@@ -130,15 +131,20 @@ function getEventImage(event) {
   const attachments = event?.attachments || [];
   const image = attachments.find((a) => (a.mimeType || "").startsWith("image/"));
   if (!image) return null;
-  if (image.fileId) {
+
+  let fileId = image.fileId;
+  if (!fileId && image.fileUrl) {
+    const match = image.fileUrl.match(/\/d\/([a-zA-Z0-9_-]+)/) || image.fileUrl.match(/id=([a-zA-Z0-9_-]+)/);
+    if (match) fileId = match[1];
+  }
+
+  if (fileId) {
     return {
-      primary: `https://drive.google.com/thumbnail?id=${image.fileId}&sz=w1000`,
-      // Alternate host — occasionally succeeds when the thumbnail endpoint
-      // above fails, though both still require the Drive file to be
-      // shared "Anyone with the link" to load without a Google sign-in.
-      fallback: `https://lh3.googleusercontent.com/d/${image.fileId}=w1000`,
+      primary: `https://lh3.googleusercontent.com/d/${fileId}`,
+      fallback: `https://drive.google.com/thumbnail?id=${fileId}&sz=w1000`,
     };
   }
+
   if (image.fileUrl) return { primary: image.fileUrl, fallback: null };
   return null;
 }
@@ -295,7 +301,7 @@ export default function Events() {
         .filter((op) => op.dayKey < todayKey)
         .slice()
         .reverse()
-        .slice(0, CALENDAR_CONFIG.archiveLimit), // last N (or fewer, if fewer exist)
+        .slice(0, CALENDAR_CONFIG.archiveLimit),
     [ops, todayKey]
   );
 

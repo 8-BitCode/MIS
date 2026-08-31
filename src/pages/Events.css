@@ -24,6 +24,7 @@
   color: var(--fg);
   font-family: "IBM Plex Mono", monospace;
   padding-bottom: 4rem;
+  overflow-x: hidden;
 }
 
 .events-page * { box-sizing: border-box; }
@@ -502,13 +503,17 @@
 .op-link:hover { text-decoration: underline; }
 
 /* ── ARCHIVE / CAROUSEL ──────────────────────────────────────────── */
-.archive-panel { padding: 0; }
+.archive-panel { 
+  padding: 0; 
+  overflow: hidden;
+}
 
 .coverflow-viewport {
   display: flex;
   align-items: center;
   gap: 0.6rem;
   padding: 2.25rem 1.25rem 1.75rem;
+  overflow: hidden;
 }
 
 .carousel-arrow {
