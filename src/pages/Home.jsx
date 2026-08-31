@@ -5,8 +5,13 @@ import Nav from "./Nav";
 import DecryptText from "./DecryptText";
 import { useEvidenceSFX } from "./useEvidenceSFX";
 
-// Swap this import for wherever spy.mp4 lives in your project
-import spyVideo from "../Assets/spy.mp4";
+// Import all spy video assets
+import spyVideo1 from "../Assets/spy.mp4";
+import spyVideo2 from "../Assets/spy2.mp4";
+import spyVideo3 from "../Assets/spy3.mp4";
+import spyVideo4 from "../Assets/spy4.mp4";
+
+const VIDEOS = [spyVideo1, spyVideo2, spyVideo3, spyVideo4];
 
 const AsciiCorners = memo(() => (
   <>
@@ -18,7 +23,6 @@ const AsciiCorners = memo(() => (
 ));
 
 // ── KEY FACTS & FIGURES ───────────────────────────────────────────
-// Figures as of Aug 2026 — update alongside SITE_LINKS / socials if these change.
 const STATS = [
   { code: "01", label: "SOCIETY FOUNDED", value: "2025" },
   { code: "02", label: "ACTIVE MEMBERS", value: "70+" },
@@ -60,8 +64,6 @@ const CASE_FILES = [
   },
 ];
 
-// Cycle the four section accents across the stat tiles so the grid
-// visually "mixes" every page's colour scheme.
 const STAT_ACCENTS = [
   "var(--accent-committee)",
   "var(--accent-events)",
@@ -83,7 +85,7 @@ function useScrollReveal() {
           observer.disconnect();
         }
       },
-      { threshold: 0.15 } // Trigger slightly earlier for smoother flow
+      { threshold: 0.15 } 
     );
     observer.observe(node);
     return () => observer.disconnect();
@@ -92,9 +94,6 @@ function useScrollReveal() {
   return [ref, visible];
 }
 
-// Counts a stat value up from 0 the moment it scrolls into view.
-// Handles values like "70+", "260+", "2025", "13" — animates the numeric
-// portion and re-appends any trailing suffix (e.g. "+") once finished.
 function CountUpValue({ value }) {
   const ref = useRef(null);
   const hasRunRef = useRef(false);
@@ -119,7 +118,7 @@ function CountUpValue({ value }) {
           const start = performance.now();
           const tick = (now) => {
             const progress = Math.min((now - start) / duration, 1);
-            const eased = 1 - Math.pow(1 - progress, 3); // ease-out
+            const eased = 1 - Math.pow(1 - progress, 3);
             setDisplay(`${Math.round(target * eased)}${suffix}`);
             if (progress < 1) requestAnimationFrame(tick);
           };
@@ -169,13 +168,15 @@ function Declassify({ children, className = "", tag: Tag = "div", style }) {
 
 export default function Home() {
   const [videoReady, setVideoReady] = useState(false);
+  const [activeVideoIndex, setActiveVideoIndex] = useState(0);
+  const videoRefs = useRef([]);
+
   const { playPinThud, playDossierOpen } = useEvidenceSFX();
 
   const [briefingRef, briefingVisible] = useScrollReveal();
   const [statsRef, statsVisible] = useScrollReveal();
   const [indexRef, indexVisible] = useScrollReveal();
 
-  // Tactical HUD state
   const [mousePos, setMousePos] = useState({ x: -100, y: -100 });
   const [isHovering, setIsHovering] = useState(false);
   const [scrollY, setScrollY] = useState(0);
@@ -184,7 +185,6 @@ export default function Home() {
     const handleMouseMove = (e) => {
       setMousePos({ x: e.clientX, y: e.clientY });
       const target = e.target;
-      // Trigger target lock animation on links and buttons
       setIsHovering(
         target.tagName === 'A' ||
         target.tagName === 'BUTTON' ||
@@ -206,6 +206,18 @@ export default function Home() {
     };
   }, []);
 
+  // Handle the seamless transition to the next video
+  const handleVideoEnd = () => {
+    const nextIdx = (activeVideoIndex + 1) % VIDEOS.length;
+    setActiveVideoIndex(nextIdx);
+    
+    // Play the next video programmatically from the start
+    if (videoRefs.current[nextIdx]) {
+      videoRefs.current[nextIdx].currentTime = 0;
+      videoRefs.current[nextIdx].play().catch(() => {});
+    }
+  };
+
   const scrollToBriefing = () => {
     playPinThud();
     document.getElementById("briefing")?.scrollIntoView({ behavior: "smooth" });
@@ -213,7 +225,6 @@ export default function Home() {
 
   return (
     <div className="home-page">
-      {/* HUD Crosshair */}
       <div 
         className={`hud-crosshair ${isHovering ? "is-locked" : ""}`} 
         style={{ transform: `translate(${mousePos.x}px, ${mousePos.y}px)` }}
@@ -227,23 +238,29 @@ export default function Home() {
       <div className="noise" aria-hidden="true" />
       <Nav />
 
-      {/* ── HERO ────────────────────────────────────────────────── */}
       <section className="hero">
         <div 
           className="hero-media" 
-          style={{ transform: `translateY(${scrollY * 0.35}px)` }} // Parallax Scroll
+          style={{ transform: `translateY(${scrollY * 0.35}px)` }}
         >
-          <video
-            className={`hero-video ${videoReady ? "is-ready" : ""}`}
-            autoPlay
-            loop
-            muted
-            playsInline
-            onCanPlay={() => setVideoReady(true)}
-            aria-hidden="true"
-          >
-            <source src={spyVideo} type="video/mp4" />
-          </video>
+          {/* Map through all videos and stack them */}
+          {VIDEOS.map((src, idx) => (
+            <video
+              key={src}
+              ref={(el) => (videoRefs.current[idx] = el)}
+              className={`hero-video ${videoReady && activeVideoIndex === idx ? "is-ready" : ""}`}
+              autoPlay={idx === 0}
+              muted
+              playsInline
+              onCanPlay={() => {
+                if (idx === 0) setVideoReady(true);
+              }}
+              onEnded={handleVideoEnd}
+              aria-hidden="true"
+            >
+              <source src={src} type="video/mp4" />
+            </video>
+          ))}
           <div className="hero-scanlines" aria-hidden="true" />
           <div className="hero-radar" aria-hidden="true" />
           <div className="hero-vignette" aria-hidden="true" />
@@ -314,7 +331,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── MISSION BRIEFING ───────────────────────────────────── */}
       <section id="briefing" className="briefing">
         <div ref={briefingRef} className={`section-frame ascii-box ${briefingVisible ? "is-visible" : ""}`}>
           <AsciiCorners />
@@ -362,7 +378,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── KEY FACTS & FIGURES ───────────────────────────────── */}
       <section className="stats">
         <div ref={statsRef} className={`section-frame ascii-box ${statsVisible ? "is-visible" : ""}`}>
           <AsciiCorners />
@@ -392,7 +407,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── QUICK ACCESS / SITE INDEX ──────────────────────────── */}
       <section className="index">
         <div ref={indexRef} className={`section-frame ascii-box ${indexVisible ? "is-visible" : ""}`}>
           <AsciiCorners />
@@ -426,7 +440,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── FOOTER ────────────────────────────────────────────── */}
       <footer className="home-footer">
         <span>
           &copy; {new Date().getFullYear()} M.I.S. — ALL TRANSMISSIONS MONITORED
