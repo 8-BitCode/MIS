@@ -487,7 +487,7 @@ export default function Committee() {
                         <span className="field-value">{activeMember.degree}</span>
                       </div>
                       <div className="field-row field-row--note">
-                        <span className="field-label">Funfact</span>
+                        <span className="field-label">FUN FACT</span>
                         <span className="field-value">
                           <FormattedIntel text={activeMember.funFact} />
                         </span>
