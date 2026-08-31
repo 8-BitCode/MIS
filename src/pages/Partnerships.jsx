@@ -26,7 +26,7 @@ const AsciiCorners = memo(() => (
 const SPONSOR_NODES = [
   {
     id: 0,
-    nodeIndex: 0,
+    nodeIndex: 8,
     name: "BRIGHT NETWORK",
     status: "PARTNER CONFIRMED",
     tier: "SOCIETY PARTNER",
@@ -35,7 +35,7 @@ const SPONSOR_NODES = [
   },
   {
     id: 1,
-    nodeIndex: 1,
+    nodeIndex: 4,
     name: "YOUR COMPANY",
     status: "SLOT OPEN",
     tier: "OPEN SPONSORSHIP",
