@@ -13,6 +13,9 @@ import Amelia1 from "../Assets/Amelia1.jpeg";
 import Amelia2 from "../Assets/Amelia2.jpeg";
 import Amelia3 from "../Assets/Amelia3.jpeg";
 import Amelia4 from "../Assets/Amelia4.jpeg";
+import Viral1 from "../Assets/Viral1.png"
+import Viral2 from "../Assets/Viral2.png"
+import Viral3 from "../Assets/Viral3.png"
 
 // ── MEMBER DATA ──────────────────────────────────────────────────
 const INITIAL_MEMBERS = [
@@ -33,10 +36,10 @@ const INITIAL_MEMBERS = [
     file: "02",
     role: "Co-Chief",
     dept: "EXECUTIVE",
-    name: "[MEMBER NAME 2]",
-    degree: "[DEGREE / PROGRAM]",
-    funFact: "[FUN FACT]",
-    photos: [],
+    name: "Viral",
+    degree: "Computer Science",
+    funFact: "I love caffeine",
+    photos: [Viral1, Viral2, Viral3],
     pos: { top: 22, left: 70 },
     connections: ["member-3", "member-5"]
   },
