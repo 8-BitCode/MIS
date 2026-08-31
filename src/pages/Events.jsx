@@ -64,7 +64,7 @@ const Slide = React.memo(({ event }) => {
       <div className="redacted-bars" aria-hidden="true">
         <span className="redacted-bar w-60" />
         <span className="redacted-bar w-100" />
-        <span className="redacted-stamp">■ IMAGE REDACTED ■</span>
+        <span className="redacted-stamp">■IMAGE REDACTED■</span>
         <span className="redacted-bar w-80" />
         <span className="redacted-bar w-40" />
       </div>
