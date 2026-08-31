@@ -809,8 +809,28 @@ body:has(.roster-page) {
 }
 
 @media (max-width: 30rem) {
-  .dossier-overlay { padding: 0.6rem; }
-  .dossier { aspect-ratio: auto; max-height: 92vh; min-height: 70vh; }
+  .dossier-overlay {
+    padding: 0.6rem;
+  }
+
+  .dossier {
+    aspect-ratio: auto;
+    max-height: 92dvh;
+  }
+
+  /* Increases height while keeping desktop styling completely untouched */
+  .dossier-portrait-frame {
+    flex: 0 0 auto;
+    width: 100%;
+    aspect-ratio: 1 / 0.9;
+    height: auto;
+  }
+
+  .dossier-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+  }
 }
 
 /* ── Interactive Portrait & Photo Cycle Indicator ───────────────── */
