@@ -16,6 +16,7 @@ import Amelia4 from "../Assets/Amelia4.jpeg";
 import Viral1 from "../Assets/Viral1.png"
 import Viral2 from "../Assets/Viral2.png"
 import Viral3 from "../Assets/Viral3.png"
+import Valeria1 from "../Assets/Valeria1.png"
 
 // ── MEMBER DATA ──────────────────────────────────────────────────
 const INITIAL_MEMBERS = [
@@ -48,10 +49,10 @@ const INITIAL_MEMBERS = [
     file: "03",
     role: "Treasurer",
     dept: "OPERATIONS",
-    name: "[MEMBER NAME 3]",
-    degree: "[DEGREE / PROGRAM]",
-    funFact: "[FUN FACT]",
-    photos: [],
+    name: " Valeria",
+    degree: "Computer Science",
+    funFact: "I know how to embroider",
+    photos: [Valeria1],
     pos: { top: 52, left: 25 },
     connections: ["member-6"]
   },
