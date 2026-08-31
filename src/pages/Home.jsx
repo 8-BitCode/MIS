@@ -17,21 +17,15 @@ const AsciiCorners = memo(() => (
   </>
 ));
 
-const Placeholder = memo(({ children }) => (
-  <span className="ph">
-    <span className="ph-flag">NEEDS INPUT</span>
-    {children}
-  </span>
-));
-
 // ── KEY FACTS & FIGURES ───────────────────────────────────────────
+// Figures as of Aug 2026 — update alongside SITE_LINKS / socials if these change.
 const STATS = [
-  { code: "01", label: "SOCIETY FOUNDED", value: "[YEAR]" },
-  { code: "02", label: "ACTIVE MEMBERS", value: "[COUNT]" },
-  { code: "03", label: "EVENTS RUN / YEAR", value: "[COUNT]" },
-  { code: "04", label: "PARTNER ORGANIZATIONS", value: "[COUNT]" },
-  { code: "05", label: "ALUMNI PLACEMENTS", value: "[COUNT]" },
-  { code: "06", label: "CAMPUS CHAPTERS", value: "[COUNT]" },
+  { code: "01", label: "SOCIETY FOUNDED", value: "2025" },
+  { code: "02", label: "ACTIVE MEMBERS", value: "70+" },
+  { code: "03", label: "EVENTS DELIVERED (25/26)", value: "13" },
+  { code: "04", label: "INSTAGRAM FOLLOWERS", value: "260+" },
+  { code: "05", label: "LINKEDIN FOLLOWERS", value: "200+" },
+  { code: "06", label: "ACADEMIC DISCIPLINES", value: "8+" },
 ];
 
 // ── QUICK ACCESS / SITE LINKS ─────────────────────────────────────
@@ -96,6 +90,50 @@ function useScrollReveal() {
   }, []);
 
   return [ref, visible];
+}
+
+// Counts a stat value up from 0 the moment it scrolls into view.
+// Handles values like "70+", "260+", "2025", "13" — animates the numeric
+// portion and re-appends any trailing suffix (e.g. "+") once finished.
+function CountUpValue({ value }) {
+  const ref = useRef(null);
+  const hasRunRef = useRef(false);
+  const [display, setDisplay] = useState("0");
+
+  useEffect(() => {
+    const node = ref.current;
+    if (!node) return;
+    const match = String(value).match(/^(\d+)(.*)$/);
+    if (!match) {
+      setDisplay(value);
+      return;
+    }
+    const target = parseInt(match[1], 10);
+    const suffix = match[2] || "";
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !hasRunRef.current) {
+          hasRunRef.current = true;
+          const duration = 900;
+          const start = performance.now();
+          const tick = (now) => {
+            const progress = Math.min((now - start) / duration, 1);
+            const eased = 1 - Math.pow(1 - progress, 3); // ease-out
+            setDisplay(`${Math.round(target * eased)}${suffix}`);
+            if (progress < 1) requestAnimationFrame(tick);
+          };
+          requestAnimationFrame(tick);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.4 }
+    );
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [value]);
+
+  return <span ref={ref}>{display}</span>;
 }
 
 function Declassify({ children, className = "", tag: Tag = "div", style }) {
@@ -231,9 +269,7 @@ export default function Home() {
             </h1>
 
             <p className="hero-subtitle">
-              <Placeholder>
-                [INSERT FULL SOCIETY NAME AND ONE-LINE TAGLINE HERE]
-              </Placeholder>
+              The Manchester Intelligence Society — from curiosity to capability.
             </p>
 
             <div className="hero-actions">
@@ -254,17 +290,17 @@ export default function Home() {
             <div className="hero-ticker-track">
               <span>
                 // WELCOME TO M.I.S. &nbsp;&nbsp;·&nbsp;&nbsp;
-                <Placeholder>[HEADLINE EVENT OR ANNOUNCEMENT]</Placeholder>
+                CATCH US AT THE SOCIETY FAIR
                 &nbsp;&nbsp;·&nbsp;&nbsp; RECRUITMENT: OPEN &nbsp;&nbsp;·&nbsp;&nbsp;
-                <Placeholder>[HEADLINE EVENT OR ANNOUNCEMENT]</Placeholder>
+                SPY CRAWL — DETAILS DROPPING SOON
                 &nbsp;&nbsp;·&nbsp;&nbsp; WELCOME TO M.I.S. &nbsp;&nbsp;·&nbsp;&nbsp;
                 RECRUITMENT: OPEN &nbsp;&nbsp;·&nbsp;&nbsp;
               </span>
               <span aria-hidden="true">
                 // WELCOME TO M.I.S. &nbsp;&nbsp;·&nbsp;&nbsp;
-                <Placeholder>[HEADLINE EVENT OR ANNOUNCEMENT]</Placeholder>
+                CATCH US AT THE SOCIETY FAIR
                 &nbsp;&nbsp;·&nbsp;&nbsp; RECRUITMENT: OPEN &nbsp;&nbsp;·&nbsp;&nbsp;
-                <Placeholder>[HEADLINE EVENT OR ANNOUNCEMENT]</Placeholder>
+                SPY CRAWL — DETAILS DROPPING SOON
                 &nbsp;&nbsp;·&nbsp;&nbsp; WELCOME TO M.I.S. &nbsp;&nbsp;·&nbsp;&nbsp;
                 RECRUITMENT: OPEN &nbsp;&nbsp;·&nbsp;&nbsp;
               </span>
@@ -294,30 +330,32 @@ export default function Home() {
             </h2>
 
             <p className="briefing-text">
-              <Placeholder>
-                [INSERT 2–3 SENTENCES EXPLAINING WHAT THE SOCIETY IS, WHAT
-                FIELD/INDUSTRY IT FOCUSES ON, AND WHO IT'S FOR — E.G. WHICH
-                STUDENTS, PROGRAMS, OR YEARS ARE WELCOME.]
-              </Placeholder>
+              The Manchester Intelligence Society (MIS) is the North West's
+              first university-level intelligence society, founded in 2025 at
+              The University of Manchester. We bridge the gap between
+              academic learning, practical skills, and the wider intelligence
+              and national security community — bringing together members
+              from computer science, politics, international relations,
+              history, literature, and beyond.
             </p>
 
             <p className="briefing-text">
-              <Placeholder>
-                [INSERT 1–2 SENTENCES ON THE SOCIETY'S MISSION OR GOALS —
-                WHAT MEMBERS GET OUT OF JOINING: SKILLS, NETWORK, EVENTS,
-                CAREER OUTCOMES, ETC.]
-              </Placeholder>
+              We build critical thinking, analytical, and decision-making
+              skills through hands-on events spanning OSINT, cyber, and
+              national security — from workshops and speaker panels to our
+              signature hackathon — preparing students for real careers in
+              intelligence, cyber, and business intelligence.
             </p>
 
             <div className="briefing-tags">
               <span className="tag staggered-fade" style={{ '--stagger': 1 }}>
-                <Placeholder>[FOCUS AREA]</Placeholder>
+                INTELLIGENCE ANALYSIS
               </span>
               <span className="tag staggered-fade" style={{ '--stagger': 2 }}>
-                <Placeholder>[FOCUS AREA]</Placeholder>
+                OSINT & CYBER
               </span>
               <span className="tag staggered-fade" style={{ '--stagger': 3 }}>
-                <Placeholder>[FOCUS AREA]</Placeholder>
+                NATIONAL SECURITY
               </span>
             </div>
           </div>
@@ -343,7 +381,9 @@ export default function Home() {
               >
                 <AsciiCorners />
                 <span className="stat-code">N-{s.code}</span>
-                <span className="stat-value">{s.value}</span>
+                <span className="stat-value">
+                  <CountUpValue value={s.value} />
+                </span>
                 <span className="stat-label">{s.label}</span>
                 <span className="stat-redact" aria-hidden="true" />
               </Declassify>
@@ -389,7 +429,7 @@ export default function Home() {
       {/* ── FOOTER ────────────────────────────────────────────── */}
       <footer className="home-footer">
         <span>
-          &copy; <Placeholder>[YEAR]</Placeholder> M.I.S. — ALL TRANSMISSIONS MONITORED
+          &copy; {new Date().getFullYear()} M.I.S. — ALL TRANSMISSIONS MONITORED
         </span>
         <span className="footer-links">
           {CASE_FILES.map((c, i) => (

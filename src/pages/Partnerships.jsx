@@ -3,6 +3,16 @@ import Nav from "./Nav";
 import DecryptText from "./DecryptText";
 import "./Partnerships.css";
 
+// Receiving inbox for tender transmissions.
+const PARTNERSHIP_EMAIL = "manchester.intelligence@manchesterstudentsunion.com";
+
+// Free, unlimited, no-signup form-to-email relay — https://formsubmit.co
+// NOTE: the first submission ever sent to this address triggers a one-time
+// confirmation email from FormSubmit that someone must click to activate
+// delivery. Until that's confirmed, requests still return success but the
+// email itself won't land.
+const FORM_ENDPOINT = `https://formsubmit.co/ajax/${PARTNERSHIP_EMAIL}`;
+
 const AsciiCorners = memo(() => (
   <>
     <span className="ascii-corner tl" aria-hidden="true">+</span>
@@ -12,38 +22,25 @@ const AsciiCorners = memo(() => (
   </>
 ));
 
-const Placeholder = memo(({ children }) => (
-  <span className="ph">
-    <span className="ph-flag">NEEDS INPUT</span>
-    {children}
-  </span>
-));
-
-// ── SPONSOR DATA ───────────────────────────────────────────────────
+// ── SPONSORSHIP SLOTS ────────────────────────────────────────────────
 const SPONSOR_NODES = [
   {
     id: 0,
-    nodeIndex: 0, // Maps to a specific vertex on the 3D shape
-    name: "CYBERDYNE SYS",
-    status: "ACTIVE (2025-2026)",
-    tier: "DIRECTORATE PARTNER",
-    reach: "98% CADET ENGAGEMENT"
+    nodeIndex: 0,
+    name: "BRIGHT NETWORK",
+    status: "PARTNER CONFIRMED",
+    tier: "SOCIETY PARTNER",
+    reach: "REFERRAL PROGRAMME · CAREER RESOURCES · EVENT ACCESS",
+    tierId: null
   },
   {
     id: 1,
-    nodeIndex: 5,
-    name: "PALANTIR TECH",
-    status: "ACTIVE (2024-2026)",
-    tier: "STRATEGIC ALLY",
-    reach: "84% CADET ENGAGEMENT"
-  },
-  {
-    id: 2,
-    nodeIndex: 10,
-    name: "LOCKHEED MARTIN",
-    status: "PREVIOUS (2022-2023)",
-    tier: "TACTICAL SUPPLIER",
-    reach: "62% CADET ENGAGEMENT"
+    nodeIndex: 1,
+    name: "YOUR COMPANY",
+    status: "SLOT OPEN",
+    tier: "OPEN SPONSORSHIP",
+    reach: "CUSTOM EVENT ACCESS · BRAND VISIBILITY · TALENT PIPELINE",
+    tierId: "tier-custom"
   }
 ];
 
@@ -53,11 +50,9 @@ function WireframeCanvas({ selectedSponsor, onSelectSponsor }) {
   const isDraggingRef = useRef(false);
   const lastMouseRef = useRef({ x: 0, y: 0 });
   
-  // Trackball State
   const rotRef = useRef({ x: 0.2, y: 0.5 });
-  const velocityRef = useRef({ x: 0, y: 0.005 }); // Constant slow auto-spin
+  const velocityRef = useRef({ x: 0, y: 0.005 });
 
-  // Vertices for a 12-Node Icosahedron
   const phi = (1 + Math.sqrt(5)) / 2;
   const rawVertices = [
     [-1, phi, 0], [1, phi, 0], [-1, -phi, 0], [1, -phi, 0],
@@ -94,28 +89,24 @@ function WireframeCanvas({ selectedSponsor, onSelectSponsor }) {
       const cx = canvas.width / 2;
       const cy = canvas.height / 2;
 
-      // Apply drag velocity & auto-spin
       if (!isDraggingRef.current) {
         rotRef.current.x += velocityRef.current.x;
         rotRef.current.y += velocityRef.current.y;
         
-        // Return X (tilt) to a neutral center slowly, keep Y spinning
         velocityRef.current.x *= 0.90;
         if (Math.abs(velocityRef.current.y) > 0.005) {
-           velocityRef.current.y *= 0.95; // damp manual spin down to auto-spin speed
+           velocityRef.current.y *= 0.95;
         } else {
-           velocityRef.current.y = 0.005; // auto-spin baseline
+           velocityRef.current.y = 0.005;
         }
       }
 
-      // Constrain X-axis (tilt) so the globe doesn't flip upside down (Makes dragging intuitive)
       rotRef.current.x = Math.max(-0.6, Math.min(0.6, rotRef.current.x));
 
       const scale = canvas.width * 0.22;
       const angleX = rotRef.current.x;
       const angleY = rotRef.current.y;
 
-      // 3D Matrix Rotations
       const projectedNodes = rawVertices.map(([x, y, z], idx) => {
         let x1 = x * Math.cos(angleY) + z * Math.sin(angleY);
         let z1 = -x * Math.sin(angleY) + z * Math.cos(angleY);
@@ -126,7 +117,6 @@ function WireframeCanvas({ selectedSponsor, onSelectSponsor }) {
         const px = cx + x1 * scale * perspective;
         const py = cy + y2 * scale * perspective;
 
-        // Check if this vertex represents a sponsor
         const sponsorMatch = SPONSOR_NODES.find(s => s.nodeIndex === idx);
 
         return { 
@@ -136,14 +126,12 @@ function WireframeCanvas({ selectedSponsor, onSelectSponsor }) {
         };
       });
 
-      // 1. Draw Globe Equator (Visual guide for intuitive spinning)
       ctx.strokeStyle = "rgba(0, 255, 102, 0.15)";
       ctx.lineWidth = 1;
       ctx.beginPath();
       ctx.ellipse(cx, cy, scale * 1.6, scale * 0.4, angleX, 0, Math.PI * 2);
       ctx.stroke();
 
-      // 2. Draw Edges
       edges.forEach(([i, j]) => {
         const n1 = projectedNodes[i];
         const n2 = projectedNodes[j];
@@ -158,41 +146,40 @@ function WireframeCanvas({ selectedSponsor, onSelectSponsor }) {
         ctx.stroke();
       });
 
-      // 3. Draw Nodes
-      projectedNodes.sort((a, b) => b.z - a.z); // Render back to front
+      projectedNodes.sort((a, b) => b.z - a.z);
       projectedNodes.forEach((node) => {
         const isSelected = selectedSponsor === node.sponsorData?.id;
+        const isConfirmed = node.sponsorData?.status === "PARTNER CONFIRMED";
         
         if (node.isSponsor) {
-          // SPONSOR NODE (Large, Glowing, Clickable)
           const radius = isSelected ? 8 : (node.z > 0 ? 5 : 3.5);
+          const haloColor = isConfirmed ? "rgba(255, 207, 92, 0.85)" : "rgba(0, 255, 102, 0.8)";
+          const dimColor = isConfirmed ? "#8a6a1a" : "#005522";
+          const brightColor = isConfirmed ? "#ffcf5c" : "#00ff66";
           
           if (isSelected) {
-            // Animated Pulse Halo
             const pulse = 4 + Math.sin(Date.now() / 150) * 2;
-            ctx.strokeStyle = "rgba(0, 255, 102, 0.8)";
+            ctx.strokeStyle = haloColor;
             ctx.lineWidth = 1.5;
             ctx.beginPath();
             ctx.arc(node.px, node.py, radius + pulse, 0, Math.PI * 2);
             ctx.stroke();
           }
 
-          ctx.fillStyle = isSelected ? "#ffffff" : node.z > 0 ? "#00ff66" : "#005522";
+          ctx.fillStyle = isSelected ? "#ffffff" : node.z > 0 ? brightColor : dimColor;
           ctx.beginPath();
           ctx.arc(node.px, node.py, radius, 0, Math.PI * 2);
           ctx.fill();
 
-          // Label
           if (node.z > -1 || isSelected) {
             ctx.font = isSelected ? "bold 10px 'IBM Plex Mono'" : "9px 'IBM Plex Mono'";
-            ctx.fillStyle = isSelected ? "#ffffff" : "#00ff66";
+            ctx.fillStyle = isSelected ? "#ffffff" : brightColor;
             ctx.fillText(
               isSelected ? `> ${node.sponsorData.name}` : `[ ${node.sponsorData.name} ]`, 
               node.px + 12, node.py + 4
             );
           }
         } else {
-          // INACTIVE NODE (Small, Dim)
           const radius = Math.max(1, 2 + node.z * 0.3);
           ctx.fillStyle = "rgba(0, 255, 102, 0.2)";
           ctx.beginPath();
@@ -221,8 +208,8 @@ function WireframeCanvas({ selectedSponsor, onSelectSponsor }) {
     const deltaX = e.clientX - lastMouseRef.current.x;
     const deltaY = e.clientY - lastMouseRef.current.y;
 
-    const vx = deltaY * 0.005; // Drag Y rotates X (tilt)
-    const vy = deltaX * 0.005; // Drag X rotates Y (spin)
+    const vx = deltaY * 0.005;
+    const vy = deltaX * 0.005;
 
     rotRef.current.x += vx;
     rotRef.current.y += vy;
@@ -245,7 +232,7 @@ function WireframeCanvas({ selectedSponsor, onSelectSponsor }) {
     const clicked = canvas._projectedNodes.find((n) => {
       if (!n.isSponsor) return false;
       const dist = Math.hypot(n.px - clickX, n.py - clickY);
-      return dist < 15; // Generous hit area
+      return dist < 15;
     });
 
     if (clicked) {
@@ -264,8 +251,8 @@ function WireframeCanvas({ selectedSponsor, onSelectSponsor }) {
         onPointerCancel={handlePointerUp}
       />
       <div className="terminal-overlay-hud">
-        <div className="hud-badge">[ SPONSOR NETWORK GLOBE ]</div>
-        <div className="hud-instruction">&gt; DRAG GLOBE TO ROTATE / CLICK SPONSOR</div>
+        <div className="hud-badge">[ AVAILABLE SPONSOR SLOTS ]</div>
+        <div className="hud-instruction">&gt; DRAG GLOBE TO ROTATE / CLICK A SLOT</div>
       </div>
     </div>
   );
@@ -299,15 +286,13 @@ function GrowthGraphCanvas() {
       const graphH = h - padBottom - 20;
       
       const elapsed = (Date.now() - startTime) / 1000;
-      const loopDuration = 4; // 4 seconds per sweep
-      const t = (elapsed % loopDuration) / (loopDuration * 0.8); // 0 to 1 over 80% of loop, then holds
-      const progress = Math.min(t, 1.0); // Clamp to 1 for the pause at the end
+      const loopDuration = 4;
+      const t = (elapsed % loopDuration) / (loopDuration * 0.8);
+      const progress = Math.min(t, 1.0);
 
-      // 1. Draw Grid & Axes
       ctx.strokeStyle = "rgba(0, 255, 102, 0.15)";
       ctx.lineWidth = 1;
       
-      // Horizontal grid lines
       for (let i = 0; i <= 4; i++) {
         const y = 20 + (graphH * i) / 4;
         ctx.beginPath();
@@ -316,7 +301,6 @@ function GrowthGraphCanvas() {
         ctx.stroke();
       }
       
-      // Vertical grid lines
       for (let i = 0; i <= 6; i++) {
         const x = padLeft + (graphW * i) / 6;
         ctx.beginPath();
@@ -325,7 +309,6 @@ function GrowthGraphCanvas() {
         ctx.stroke();
       }
 
-      // Axis Labels
       ctx.fillStyle = "rgba(0, 255, 102, 0.6)";
       ctx.font = "9px 'IBM Plex Mono'";
       ctx.fillText("HIGH", 5, 25);
@@ -335,7 +318,6 @@ function GrowthGraphCanvas() {
       ctx.fillText("Q3", padLeft + graphW * 0.66, h - 10);
       ctx.fillText("Q4 (PROJ)", w - 45, h - 10);
 
-      // 2. Draw Baseline Growth (Linear / Organic)
       ctx.beginPath();
       ctx.lineWidth = 1;
       ctx.strokeStyle = "rgba(0, 255, 102, 0.3)";
@@ -343,18 +325,16 @@ function GrowthGraphCanvas() {
       ctx.moveTo(padLeft, h - padBottom);
       ctx.lineTo(w, h - padBottom - (graphH * 0.2));
       ctx.stroke();
-      ctx.setLineDash([]); // reset
+      ctx.setLineDash([]);
 
-      // 3. Draw Exponential Growth Curve (With Sponsorship)
       const points = [];
       const steps = 100;
       
       for (let i = 0; i <= steps; i++) {
-        const nx = i / steps; // Normalized x (0 to 1)
-        if (nx > progress) break; // Only calculate up to current progress
+        const nx = i / steps;
+        if (nx > progress) break;
 
         const x = padLeft + nx * graphW;
-        // Exponential function: y scales rapidly as nx approaches 1
         const ny = Math.pow(nx, 3.5); 
         const y = (h - padBottom) - (ny * graphH);
         
@@ -362,7 +342,6 @@ function GrowthGraphCanvas() {
       }
 
       if (points.length > 0) {
-        // Draw Area Fill under the curve
         ctx.beginPath();
         ctx.moveTo(points[0].x, h - padBottom);
         for (const p of points) ctx.lineTo(p.x, p.y);
@@ -375,7 +354,6 @@ function GrowthGraphCanvas() {
         ctx.fillStyle = grad;
         ctx.fill();
 
-        // Draw the solid curve line
         ctx.beginPath();
         ctx.lineWidth = 2.5;
         ctx.strokeStyle = "#00ff66";
@@ -389,7 +367,6 @@ function GrowthGraphCanvas() {
         ctx.stroke();
         ctx.shadowBlur = 0;
 
-        // Draw glowing leading dot
         const lastPoint = points[points.length - 1];
         ctx.beginPath();
         ctx.fillStyle = "#ffffff";
@@ -399,7 +376,6 @@ function GrowthGraphCanvas() {
         ctx.fill();
         ctx.shadowBlur = 0;
 
-        // Leading indicator line
         ctx.beginPath();
         ctx.strokeStyle = "rgba(255, 255, 255, 0.5)";
         ctx.lineWidth = 1;
@@ -422,57 +398,179 @@ function GrowthGraphCanvas() {
   return <canvas ref={canvasRef} className="growth-graph-canvas" />;
 }
 
-// ── TIER BID DATA ──────────────────────────────────────────────────
+// ── TIER BID DATA ─────────────────────────────────────────────────
 const SPONSOR_TIERS = [
   {
-    id: "tier-1",
+    id: "tier-standard",
     code: "CLASS-01",
-    name: "TACTICAL SUPPLIER",
-    price: "[£ standard_rate / YR]",
-    clearance: "LEVEL 1",
+    name: "STANDARD",
+    price: "£750 / YR",
+    clearance: "OUTREACH + HACKATHON",
     perks: [
-      "[INSERT PERK 1 — e.g. Logo on site & event slides]",
-      "[INSERT PERK 2 — e.g. Access to member resume book]"
+      "1 event per semester",
+      "Social media promotion",
+      "Basic brand visibility",
+      "Limited CV access",
+      "1 custom event"
     ]
   },
   {
-    id: "tier-2",
+    id: "tier-enhanced",
     code: "CLASS-02",
-    name: "STRATEGIC ALLY",
-    price: "[£ premium_rate / YR]",
-    clearance: "LEVEL 2",
+    name: "ENHANCED",
+    price: "£1,250 / YR",
+    clearance: "OUTREACH + HACKATHON",
     popular: true,
     perks: [
-      "[INSERT PERK 1 — All Class-01 Perks included]",
-      "[INSERT PERK 2 — e.g. Dedicated workshop/hackathon slot]",
-      "[INSERT PERK 3 — e.g. Booth at Annual Intelligence Summit]"
+      "2 events per semester",
+      "Social media promotion",
+      "Standard brand visibility",
+      "Limited CV access",
+      "2 custom events"
     ]
   },
   {
-    id: "tier-3",
+    id: "tier-premium",
     code: "CLASS-03",
-    name: "DIRECTORATE PARTNER",
-    price: "[£ custom_quote]",
-    clearance: "TOP SECRET",
+    name: "PREMIUM",
+    price: "£1,700 / YR",
+    clearance: "CORE TIER + BESPOKE EVENTS",
     perks: [
-      "[INSERT PERK 1 — Full Society Co-Branding rights]",
-      "[INSERT PERK 2 — Exclusive headline sponsorship events]",
-      "[INSERT PERK 3 — Direct access to top-tier talent pipeline]"
+      "5–6 events per year",
+      "Social media promotion",
+      "High brand visibility",
+      "Full CV access",
+      "4 custom events"
+    ]
+  },
+  {
+    id: "tier-one-off",
+    code: "CLASS-00",
+    name: "ONE-OFF",
+    price: "£300",
+    clearance: "ANY SINGLE EVENT",
+    perks: [
+      "1 event, one semester",
+      "Social media promotion",
+      "Event-only brand visibility"
+    ]
+  },
+  {
+    id: "tier-custom",
+    code: "CLASS-XX",
+    name: "CUSTOM",
+    price: "QUOTE ON FILE",
+    clearance: "NEGOTIATED / BESPOKE",
+    custom: true,
+    perks: [
+      "Built around your objectives",
+      "Flexible event cadence",
+      "Negotiable visibility & CV access",
+      "Specify scope in the brief below"
     ]
   }
 ];
 
 export default function Partnerships() {
-  const [selectedTier, setSelectedTier] = useState("tier-2");
-  const [selectedSponsor, setSelectedSponsor] = useState(0); // Default to first sponsor
+  const [selectedTier, setSelectedTier] = useState("tier-enhanced");
+  const [expandedMobileTiers, setExpandedMobileTiers] = useState({});
+  const [selectedSponsor, setSelectedSponsor] = useState(0);
   const [tenderSubmitted, setTenderSubmitted] = useState(false);
+  const [dossierText, setDossierText] = useState("");
+  const [copyState, setCopyState] = useState("idle");
+  const [sendState, setSendState] = useState("idle"); // idle | sending | sent | failed
+
+  const orgRef = useRef(null);
+  const emailRef = useRef(null);
+  const briefRef = useRef(null);
 
   const activeSponsorData = SPONSOR_NODES.find(s => s.id === selectedSponsor);
 
-  const handleTender = (e) => {
+  const handleSelectSponsor = (id) => {
+    setSelectedSponsor(id);
+    const node = SPONSOR_NODES.find((s) => s.id === id);
+    if (node?.tierId) setSelectedTier(node.tierId);
+  };
+
+  const toggleMobileExpand = (tierId, e) => {
+    e.stopPropagation();
+    setExpandedMobileTiers((prev) => ({
+      ...prev,
+      [tierId]: !prev[tierId]
+    }));
+  };
+
+const handleTender = async (e) => {
     e.preventDefault();
-    setTenderSubmitted(true);
-    setTimeout(() => setTenderSubmitted(false), 4000);
+
+    const tier = SPONSOR_TIERS.find((t) => t.id === selectedTier);
+    const orgName = orgRef.current?.value?.trim() || "UNIDENTIFIED CONTRACTOR";
+    const contactEmail = emailRef.current?.value?.trim() || "";
+    const brief = briefRef.current?.value?.trim() || "No additional brief provided.";
+
+    const specificTitle = `Partnership Inquiry — ${orgName} (${tier?.name || "Unspecified"} Tier)`;
+
+    const body =
+`To the MIS Partnerships Team,
+
+${orgName} has submitted a formal partnership tender for your review.
+
+--------------------------------------------------
+SPECIFIED TIER : ${tier?.name || "Unspecified"} (${tier?.price || "N/A"})
+CLEARANCE CODE : ${tier?.code || "N/A"}
+--------------------------------------------------
+
+PROPOSAL / PROCUREMENT BRIEF:
+${brief}
+
+Please let us know the next steps to proceed with this partnership.
+
+Kind regards,
+${orgName}`;
+
+    setDossierText(body);
+    setCopyState("idle");
+    setSendState("sending");
+    setTenderSubmitted(false);
+
+    try {
+      const res = await fetch(FORM_ENDPOINT, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json"
+        },
+        body: JSON.stringify({
+          _subject: specificTitle,
+          _template: "box",
+          _replyto: contactEmail,
+          Organization: orgName,
+          "Contact Email": contactEmail,
+          Tier: `${tier?.name || "Unspecified"} (${tier?.price || "N/A"})`,
+          "Proposal Brief": brief
+        })
+      });
+
+      if (!res.ok) throw new Error("Non-OK response from relay");
+
+      setSendState("sent");
+      setTenderSubmitted(true);
+    } catch (err) {
+      // Relay unreachable — fall back to the visitor's own mail client.
+      setSendState("failed");
+      setTenderSubmitted(true);
+      window.location.href = `mailto:${PARTNERSHIP_EMAIL}?subject=${encodeURIComponent(specificTitle)}&body=${encodeURIComponent(body)}`;
+    }
+  };
+
+  const handleCopyDossier = async () => {
+    try {
+      await navigator.clipboard.writeText(dossierText);
+      setCopyState("copied");
+      setTimeout(() => setCopyState("idle"), 2500);
+    } catch (err) {
+      setCopyState("failed");
+    }
   };
 
   return (
@@ -507,23 +605,23 @@ export default function Partnerships() {
           <div className="wireframe-panel ascii-box">
             <AsciiCorners />
             <div className="panel-bar">
-              <span>PARTNER NETWORK TOPOLOGY</span>
+              <span>OPEN SPONSORSHIP SLOTS</span>
               <span className="rec-indicator">ACTIVE ●</span>
             </div>
             
             <WireframeCanvas
               selectedSponsor={selectedSponsor}
-              onSelectSponsor={setSelectedSponsor}
+              onSelectSponsor={handleSelectSponsor}
             />
           </div>
 
           <div className="stats-panel ascii-box">
             <AsciiCorners />
-            <div className="panel-bar">SELECTED PARTNER DOSSIER</div>
+            <div className="panel-bar">SLOT PREVIEW · CLAIM THIS SPOT</div>
             
             <div className="kpi-grid-green">
               <div className="kpi-card-green">
-                <span className="kpi-code">CORPORATE ID</span>
+                <span className="kpi-code">SLOT ID</span>
                 <span className="kpi-label">ORGANIZATION</span>
                 <span className="kpi-value accent" style={{ fontSize: '1.1rem' }}>
                   {activeSponsorData.name}
@@ -531,21 +629,21 @@ export default function Partnerships() {
               </div>
               <div className="kpi-card-green">
                 <span className="kpi-code">CONTRACT</span>
-                <span className="kpi-label">LIFECYCLE STATUS</span>
+                <span className="kpi-label">STATUS</span>
                 <span className="kpi-value" style={{ fontSize: '1rem' }}>
                   {activeSponsorData.status}
                 </span>
               </div>
               <div className="kpi-card-green">
                 <span className="kpi-code">CLEARANCE</span>
-                <span className="kpi-label">SPONSORSHIP TIER</span>
+                <span className="kpi-label">TIER</span>
                 <span className="kpi-value" style={{ fontSize: '1rem' }}>
                   {activeSponsorData.tier}
                 </span>
               </div>
               <div className="kpi-card-green">
                 <span className="kpi-code">IMPACT</span>
-                <span className="kpi-label">NETWORK METRICS</span>
+                <span className="kpi-label">PERKS INCLUDE</span>
                 <span className="kpi-value" style={{ fontSize: '1rem' }}>
                   {activeSponsorData.reach}
                 </span>
@@ -582,44 +680,61 @@ export default function Partnerships() {
           <div className="tiers-grid">
             {SPONSOR_TIERS.map((tier) => {
               const isSelected = selectedTier === tier.id;
+              const isExpanded = !!expandedMobileTiers[tier.id];
+
               return (
                 <div
                   key={tier.id}
-                  className={`tier-card ascii-box ${tier.popular ? "is-popular" : ""} ${isSelected ? "is-selected" : ""}`}
+                  className={`tier-card ascii-box ${tier.popular ? "is-popular" : ""} ${tier.custom ? "is-custom" : ""} ${isSelected ? "is-selected" : ""} ${isExpanded ? "is-mobile-expanded" : ""}`}
                   onClick={() => setSelectedTier(tier.id)}
                 >
                   <AsciiCorners />
                   {tier.popular && <span className="popular-badge">PRIORITY TENDER</span>}
+                  {tier.custom && <span className="custom-badge">BUILD YOUR OWN</span>}
                   
+                  {/* Desktop Title & Header */}
                   <div className="tier-header">
                     <span className="tier-code">{tier.code}</span>
                     <h2 className="tier-name">{tier.name}</h2>
                     <div className="tier-price">{tier.price}</div>
                   </div>
 
-                  <div className="tier-clearance">
-                    <span>REQ CLEARANCE:</span> <strong>{tier.clearance}</strong>
+                  {/* Connected Mobile Title Accordion Header */}
+                  <div className="mobile-accordion-header" onClick={(e) => toggleMobileExpand(tier.id, e)}>
+                    <div className="mobile-title-info">
+                      <span className="mobile-code">[{tier.code}]</span>
+                      <span className="mobile-name">{tier.name}</span>
+                      <span className="mobile-price">— {tier.price}</span>
+                    </div>
+                    <span className="mobile-icon">{isExpanded ? "▲" : "▼"}</span>
                   </div>
 
-                  <ul className="tier-perks">
-                    {tier.perks.map((perk, i) => (
-                      <li key={i}>
-                        <span className="bullet">+</span>
-                        <Placeholder>{perk}</Placeholder>
-                      </li>
-                    ))}
-                  </ul>
+                  {/* Expanded Content */}
+                  <div className="tier-details-collapsible">
+                    <div className="tier-clearance">
+                      <span>REQ CLEARANCE:</span> <strong>{tier.clearance}</strong>
+                    </div>
 
-                  <button
-                    type="button"
-                    className={`tier-btn ${isSelected ? "active" : ""}`}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setSelectedTier(tier.id);
-                    }}
-                  >
-                    {isSelected ? "[ TENDER SELECTED ]" : "SELECT TENDER"}
-                  </button>
+                    <ul className="tier-perks">
+                      {tier.perks.map((perk, i) => (
+                        <li key={i}>
+                          <span className="bullet">+</span>
+                          {perk}
+                        </li>
+                      ))}
+                    </ul>
+
+                    <button
+                      type="button"
+                      className={`tier-btn ${isSelected ? "active" : ""}`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedTier(tier.id);
+                      }}
+                    >
+                      {isSelected ? "[ TENDER SELECTED ]" : "SELECT TENDER"}
+                    </button>
+                  </div>
                 </div>
               );
             })}
@@ -635,11 +750,11 @@ export default function Partnerships() {
             <div className="form-grid">
               <div className="form-group">
                 <label>&gt; ORGANIZATION / CONTRACTOR</label>
-                <input type="text" required placeholder="e.g. Acme Corp / BAE Systems" />
+                <input ref={orgRef} type="text" required placeholder="e.g. Acme Corp / BAE Systems" />
               </div>
               <div className="form-group">
-                <label>&gt; OFFICIAL REPRESENTATIVE EMAIL</label>
-                <input type="email" required placeholder="representative@organization.com" />
+                <label>&gt; CONTACT EMAIL</label>
+                <input ref={emailRef} type="email" required placeholder="you@yourcompany.com" />
               </div>
               <div className="form-group">
                 <label>&gt; SELECTED CLEARANCE TIER</label>
@@ -651,20 +766,50 @@ export default function Partnerships() {
               </div>
               <div className="form-group full-width">
                 <label>&gt; PROPOSAL / PROCUREMENT BRIEF</label>
-                <textarea rows="3" placeholder="Specify interest, custom requirements, or timeline..."></textarea>
+                <textarea ref={briefRef} rows="3" placeholder="Specify interest, custom requirements, or timeline..."></textarea>
               </div>
             </div>
 
             <div className="form-actions">
-              <button type="submit" className="submit-btn">
-                [ TRANSMIT TENDER BID ]
+              <button type="submit" className="submit-btn" disabled={sendState === "sending"}>
+                {sendState === "sending" ? "[ TRANSMITTING... ]" : "[ TRANSMIT TENDER BID ]"}
               </button>
-              {tenderSubmitted && (
+              {sendState === "sent" && (
                 <span className="submit-msg">
-                  &gt; TRANSMISSION RECEIVED. LINK ESTABLISHED.
+                  &gt; TENDER TRANSMITTED. REPLY PENDING FROM MIS.
+                </span>
+              )}
+              {sendState === "failed" && (
+                <span className="submit-msg submit-msg-warn">
+                  &gt; RELAY UNREACHABLE. FELL BACK TO YOUR MAIL CLIENT.
                 </span>
               )}
             </div>
+
+            {tenderSubmitted && sendState === "failed" && (
+              <div className="fallback-panel ascii-box">
+                <AsciiCorners />
+                <div className="panel-bar fallback-bar">
+                  <span>&gt; MANUAL TRANSMISSION FALLBACK</span>
+                  <span className="green-tag">STANDBY</span>
+                </div>
+                <p className="fallback-note">
+                  The direct relay couldn't be reached, so your mail client should have opened
+                  instead. If it didn't, copy the dossier below and paste it into an email
+                  addressed to <span className="fallback-addr">{PARTNERSHIP_EMAIL}</span>.
+                </p>
+                <pre className="fallback-dossier">{dossierText}</pre>
+                <div className="fallback-actions">
+                  <button type="button" className="copy-btn" onClick={handleCopyDossier}>
+                    {copyState === "copied"
+                      ? "[ COPIED TO CLIPBOARD ]"
+                      : copyState === "failed"
+                      ? "[ COPY FAILED — SELECT MANUALLY ]"
+                      : "[ COPY DOSSIER TEXT ]"}
+                  </button>
+                </div>
+              </div>
+            )}
           </form>
         </section>
 

@@ -317,7 +317,6 @@ body:has(.roster-page) {
 }
 
 .board-list {
-  z-index: 2;
   list-style: none;
   margin: 0;
   padding: 0;
@@ -327,6 +326,7 @@ body:has(.roster-page) {
 
 .pin-wrapper {
   position: absolute;
+  z-index: 2;
   transform: translate(-50%, -50%);
   touch-action: none;
   cursor: crosshair;
@@ -649,8 +649,11 @@ body:has(.roster-page) {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  filter: grayscale(1) contrast(1.15) brightness(0.95);
+  filter: contrast(1.15) brightness(0.95);
   display: block;
+  pointer-events: none;
+  -webkit-user-drag: none;
+  user-select: none;
 }
 
 .portrait-redacted {
@@ -759,10 +762,12 @@ body:has(.roster-page) {
   color: var(--fg);
 }
 
-.field-row--note .field-value {
-  color: var(--fg-dim);
-  font-size: 0.65rem;
+.dossier-fields .field-row--note .field-value {
+  color: var(--accent) !important;
+  font-size: 0.88rem !important;
+  font-weight: 600 !important;
 }
+
 .field-row--note .field-value::before { content: "// "; color: var(--line); }
 
 .dossier-nav {
@@ -806,4 +811,54 @@ body:has(.roster-page) {
 @media (max-width: 30rem) {
   .dossier-overlay { padding: 0.6rem; }
   .dossier { aspect-ratio: auto; max-height: 92vh; min-height: 70vh; }
+}
+
+/* ── Interactive Portrait & Photo Cycle Indicator ───────────────── */
+.dossier-portrait-frame.is-clickable {
+  cursor: pointer;
+}
+
+.photo-cycle-indicator {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  z-index: 5;
+  font-size: 0.48rem;
+  letter-spacing: 0.05em;
+  color: var(--bg);
+  background: var(--accent);
+  padding: 0.15rem 0.35rem;
+  font-weight: 600;
+  box-shadow: 0 0 6px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+  animation: pulse-indicator 2s infinite ease-in-out;
+}
+
+@keyframes pulse-indicator {
+  0%, 100% { opacity: 0.85; }
+  50% { opacity: 1; }
+}
+
+/* ── Glowing Animated Green Alien Text ──────────────────────────── */
+.glowing-alien {
+  color: #39ff14;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-shadow: 0 0 4px #00ff66, 0 0 8px #00ff66, 0 0 12px #00ff66;
+  animation: alien-pulse 1.8s ease-in-out infinite alternate;
+}
+
+@keyframes alien-pulse {
+  0% {
+    color: #00ff66;
+    text-shadow: 0 0 3px #00ff66, 0 0 6px #00ff66, 0 0 12px rgba(0, 255, 102, 0.6);
+  }
+  50% {
+    color: #39ff14;
+    text-shadow: 0 0 6px #39ff14, 0 0 14px #39ff14, 0 0 22px #39ff14, 0 0 30px rgba(57, 255, 20, 0.8);
+  }
+  100% {
+    color: #00ff66;
+    text-shadow: 0 0 3px #00ff66, 0 0 6px #00ff66, 0 0 12px rgba(0, 255, 102, 0.6);
+  }
 }

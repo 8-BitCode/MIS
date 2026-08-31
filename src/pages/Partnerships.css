@@ -11,10 +11,10 @@
   --line-soft: #001a08;
   --fg: #d0edd8;
   --fg-dim: #508860;
-  --accent: #00ff66; /* Classic Cyberpunk Green */
+  --accent: #00ff66;
   --accent-dim: #00441b;
   --flag: #ff3333;
-  --popular: #ffcf5c; /* Gold — marks the recommended tier, distinct from hover/selection green */
+  --popular: #ffcf5c;
 
   min-height: 100vh;
   background: var(--bg);
@@ -82,25 +82,6 @@
 .rec-indicator { color: var(--accent); animation: blink 1s infinite; }
 @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.2; } }
 
-/* ── Placeholders ──────────────────────────────────────────────── */
-.ph {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  color: var(--accent);
-  border: 1px dashed var(--accent-dim);
-  background: rgba(0, 255, 102, 0.05);
-  padding: 0.1rem 0.4rem;
-  font-size: 0.75rem;
-}
-.ph-flag {
-  font-size: 0.5rem;
-  color: #000;
-  background: var(--accent);
-  padding: 0 0.25rem;
-  font-weight: bold;
-}
-
 /* ── Header Terminal Bar ────────────────────────────────────────── */
 .dashboard-header { padding: 1.2rem 1.25rem; margin-bottom: 1.5rem; border-color: var(--accent-dim); }
 .header-top { display: flex; justify-content: space-between; font-size: 0.65rem; color: var(--fg-dim); border-bottom: 1px dashed var(--line); padding-bottom: 0.4rem; margin-bottom: 0.75rem; }
@@ -118,7 +99,6 @@
   margin-bottom: 1.5rem;
 }
 
-/* 1x1 Compact Interactive Wireframe Box */
 .wireframe-viewport-1x1 {
   position: relative;
   width: 100%;
@@ -151,7 +131,6 @@
 .hud-badge { font-size: 0.58rem; color: var(--accent); background: rgba(4, 8, 5, 0.85); padding: 0.2rem 0.4rem; align-self: flex-start; border: 1px solid var(--accent-dim); }
 .hud-instruction { font-size: 0.55rem; color: var(--fg-dim); background: rgba(4, 8, 5, 0.85); padding: 0.2rem 0.4rem; align-self: flex-end; }
 
-/* Terminal Green KPI Display Grid */
 .kpi-grid-green {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -171,7 +150,7 @@
 .kpi-value { font-size: 1.3rem; color: #fff; font-weight: 700; }
 .kpi-value.accent { color: var(--accent); }
 
-/* ── GREEN EXPONENTIAL GROWTH GRAPH ─────────────────────────────── */
+/* ── GRAPH PANEL ────────────────────────────────────────────────── */
 .green-graph-panel { margin-bottom: 2.5rem; border-color: var(--line); }
 .large-graph-viewport-green {
   position: relative;
@@ -197,30 +176,85 @@
 }
 .hud-center { color: var(--accent); font-weight: 600; }
 
-/* ── Tier Pricing Cards ─────────────────────────────────────────── */
+/* ── Tier Pricing Cards (Centered Desktop Flex Grid & Uniform Sizing) ─ */
 .section-titlebar { font-size: 0.75rem; color: var(--accent); margin-bottom: 1rem; border-bottom: 1px dashed var(--line); padding-bottom: 0.4rem; letter-spacing: 0.08em; font-weight: 600; }
 
 .tiers-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   gap: 1.25rem;
   margin-bottom: 2.5rem;
 }
-.tier-card { padding: 1.25rem; display: flex; flex-direction: column; cursor: pointer; transition: border-color 0.2s ease, box-shadow 0.2s ease; }
+
+.tiers-grid .tier-card {
+  flex: 1 1 18rem;
+  max-width: 21rem;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  box-sizing: border-box;
+}
+
 .tier-card:hover { border-color: var(--fg-dim); }
 .tier-card.is-selected { border-color: var(--accent); box-shadow: inset 0 0 15px rgba(0, 255, 102, 0.1); }
 .tier-card.is-popular { border-color: var(--popular); }
 .tier-card.is-popular:hover { border-color: var(--popular); box-shadow: inset 0 0 0 2px var(--fg-dim); }
 .popular-badge { font-size: 0.52rem; color: #000; background: var(--popular); padding: 0.1rem 0.4rem; align-self: flex-start; margin-bottom: 0.5rem; font-weight: bold; }
+.tier-card.is-custom { border-style: dashed; border-color: var(--fg-dim); }
+.tier-card.is-custom:hover { border-color: var(--accent); }
+.custom-badge { font-size: 0.52rem; color: var(--accent); background: transparent; border: 1px dashed var(--accent-dim); padding: 0.1rem 0.4rem; align-self: flex-start; margin-bottom: 0.5rem; font-weight: bold; letter-spacing: 0.05em; }
+
+.tier-header {
+  min-height: 4.5rem;
+  display: flex;
+  flex-direction: column;
+}
 .tier-code { font-size: 0.6rem; color: var(--fg-dim); }
 .tier-name { margin: 0.2rem 0; font-size: 1.1rem; color: #fff; font-weight: 700; }
 .tier-price { font-size: 0.85rem; color: var(--accent); font-weight: 600; margin-bottom: 0.8rem; }
+
+.mobile-accordion-header {
+  display: none;
+}
+
+.tier-details-collapsible {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
 .tier-clearance { font-size: 0.65rem; color: var(--fg-dim); border-top: 1px dashed var(--line); border-bottom: 1px dashed var(--line); padding: 0.4rem 0; margin-bottom: 0.8rem; }
 .tier-clearance strong { color: var(--accent); }
-.tier-perks { list-style: none; padding: 0; margin: 0 0 1.2rem; font-size: 0.68rem; display: flex; flex-direction: column; gap: 0.4rem; }
+
+.tier-perks {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1.2rem;
+  font-size: 0.68rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  flex-grow: 1;
+}
 .tier-perks li { display: flex; gap: 0.4rem; }
 .tier-perks .bullet { color: var(--accent); }
-.tier-btn { margin-top: auto; background: none; border: 1px solid var(--line); color: var(--fg-dim); font-family: inherit; font-size: 0.65rem; padding: 0.5rem; cursor: pointer; transition: all 0.2s ease; font-weight: 600; }
+
+.tier-btn { 
+  margin-top: auto; 
+  background: none; 
+  border: 1px solid var(--line); 
+  color: var(--fg-dim); 
+  font-family: inherit; 
+  font-size: 0.65rem; 
+  padding: 0.5rem; 
+  cursor: pointer; 
+  transition: all 0.2s ease; 
+  font-weight: 600; 
+  width: 100%;
+}
 .tier-btn:hover, .tier-btn.active { background: var(--accent); color: #000; border-color: var(--accent); }
 
 /* ── Form Styling ───────────────────────────────────────────────── */
@@ -234,9 +268,45 @@
 .form-group input:focus, .form-group textarea:focus { border-color: var(--accent); }
 .form-actions { display: flex; align-items: center; gap: 1rem; }
 .submit-btn { background: var(--accent); color: #000; border: none; font-family: inherit; font-size: 0.7rem; font-weight: 700; padding: 0.6rem 1.2rem; cursor: pointer; letter-spacing: 0.05em; }
+.submit-btn:disabled { opacity: 0.5; cursor: wait; }
 .submit-msg { font-size: 0.65rem; color: var(--accent); font-weight: bold; }
+.submit-msg-warn { color: var(--flag); }
 
-/* ── RESPONSIVE ─────────────────────────────────────────────────── */
+/* ── Manual transmission fallback ────────────────── */
+.fallback-panel { margin-top: 1.25rem; border-color: var(--accent-dim); background: #020503; }
+.fallback-bar { color: var(--accent); }
+.fallback-note { font-size: 0.68rem; color: var(--fg-dim); padding: 0.8rem 1rem 0; margin: 0; line-height: 1.5; }
+.fallback-addr { color: var(--accent); font-weight: 600; }
+.fallback-dossier {
+  margin: 0.75rem 1rem;
+  padding: 0.75rem;
+  background: #000;
+  border: 1px dashed var(--line);
+  color: var(--fg);
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.65rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 14rem;
+  overflow-y: auto;
+}
+.fallback-actions { padding: 0 1rem 1rem; }
+.copy-btn {
+  background: none;
+  border: 1px solid var(--line);
+  color: var(--fg-dim);
+  font-family: inherit;
+  font-size: 0.65rem;
+  font-weight: 600;
+  padding: 0.5rem 0.9rem;
+  cursor: pointer;
+  letter-spacing: 0.05em;
+  transition: all 0.2s ease;
+}
+.copy-btn:hover { background: var(--accent); color: #000; border-color: var(--accent); }
+
+/* ── RESPONSIVE & MOBILE ACCORDION (CONNECTED ROWS) ─────────────── */
 @media (max-width: 58rem) {
   .telemetry-top-grid {
     grid-template-columns: 1fr;
@@ -247,23 +317,152 @@
   }
 }
 
-/* For modern browsers (Chrome, Edge, Safari) */
+@media (max-width: 48rem) {
+  .tiers-grid {
+    flex-direction: column;
+    gap: 0;
+    padding-bottom: 2px;
+  }
+
+  /* Base row setup */
+  .tiers-grid .tier-card {
+    flex: 1 1 100%;
+    max-width: 100%;
+    padding: 0;
+    margin-top: 0;
+    border: 1px solid var(--line);
+    border-bottom: none; /* Strip bottom border to prevent stacking */
+    box-shadow: none;
+    position: relative;
+    z-index: 1;
+  }
+
+  .tiers-grid .tier-card:last-child {
+    border-bottom: 1px solid var(--line);
+  }
+
+  /* ── SPECIAL BORDER OVERRIDES ON MOBILE ────────────────────── */
+
+  /* Priority / Popular Tier (Gold/Yellow Border) */
+  .tiers-grid .tier-card.is-popular {
+    border-color: var(--popular) !important;
+    border-bottom: 1px solid var(--popular) !important;
+    z-index: 3; /* Pull above adjacent borders so the color shows fully */
+    margin-bottom: -1px; /* Overlap the next row's top border */
+  }
+
+  /* Custom Tier (Accent Green Border) */
+  .tiers-grid .tier-card.is-custom {
+    border: 1px dashed var(--accent) !important;
+    border-bottom: 1px dashed var(--accent) !important;
+    z-index: 2;
+    margin-bottom: -1px;
+  }
+
+  /* Selected Tier Highlight */
+  .tiers-grid .tier-card.is-selected:not(.is-popular):not(.is-custom) {
+    border-color: var(--accent) !important;
+    border-bottom: 1px solid var(--accent) !important;
+    z-index: 2;
+    margin-bottom: -1px;
+  }
+
+  /* Decorative cleanup */
+  .popular-badge, 
+  .custom-badge,
+  .tier-header,
+  .tiers-grid .ascii-corner {
+    display: none;
+  }
+
+  /* Mobile Title Bar */
+  .mobile-accordion-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.85rem 1rem;
+    background: var(--line-soft);
+    cursor: pointer;
+    font-size: 0.75rem;
+    position: relative;
+    border: none;
+  }
+
+  /* Highlight header background for special tiers */
+  .tier-card.is-popular .mobile-accordion-header {
+    background: rgba(255, 207, 92, 0.08);
+  }
+
+  .tier-card.is-custom .mobile-accordion-header {
+    background: rgba(0, 255, 102, 0.05);
+  }
+
+  .mobile-title-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .mobile-code {
+    color: var(--fg-dim);
+    font-size: 0.65rem;
+  }
+
+  .mobile-name {
+    color: #fff;
+    font-weight: 700;
+  }
+
+  .mobile-price {
+    color: var(--accent);
+    font-weight: 600;
+    font-size: 0.7rem;
+  }
+
+  .tier-card.is-popular .mobile-price {
+    color: var(--popular);
+  }
+
+  .mobile-icon {
+    color: var(--accent);
+    font-size: 0.65rem;
+  }
+
+  .tier-card.is-popular .mobile-icon {
+    color: var(--popular);
+  }
+
+  /* Expanded Body */
+  .tier-details-collapsible {
+    display: none;
+    padding: 1rem;
+    background: var(--panel);
+    border-top: 1px dashed var(--line);
+  }
+
+  .tier-card.is-mobile-expanded .tier-details-collapsible {
+    display: flex;
+  }
+
+  .tier-card.is-mobile-expanded .mobile-accordion-header {
+    background: var(--panel);
+  }
+}
 .procurement-page.matrix-theme::-webkit-scrollbar {
   display: none;
 }
 
-/* For Firefox */
 .procurement-page.matrix-theme {
   scrollbar-width: none;
 }
 
 html, body {
-  overflow: -moz-scrollbars-none; /* Firefox */
-  -ms-overflow-style: none; /* Internet Explorer 10+ */
-  scrollbar-width: none; /* Firefox */
+  overflow: -moz-scrollbars-none;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
 html::-webkit-scrollbar, 
 body::-webkit-scrollbar {
-  display: none; /* Safari and Chrome */
+  display: none;
 }

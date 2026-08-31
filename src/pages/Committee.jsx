@@ -2,7 +2,15 @@ import React, { useState, useEffect, useCallback, useRef, useMemo, memo } from "
 import "./Committee.css";
 import Nav from "./Nav";
 
-// ── MEMBER DATA (5 ROLES / 6 POSITIONS) ─────────────────────────────
+// Asset imports
+import Sana1 from "../Assets/Sana1.jpeg";
+import Pau1 from "../Assets/Pau1.jpeg";
+import Pau2 from "../Assets/Pau2.jpeg";
+import Pau3 from "../Assets/Pau3.jpeg";
+import Akram1 from "../Assets/Akram1.png";
+import Akram2 from "../Assets/Akram2.png";
+
+// ── MEMBER DATA ──────────────────────────────────────────────────
 const INITIAL_MEMBERS = [
   {
     id: "member-1",
@@ -12,7 +20,7 @@ const INITIAL_MEMBERS = [
     name: "[MEMBER NAME 1]",
     degree: "[DEGREE / PROGRAM]",
     funFact: "[FUN FACT]",
-    photo: null,
+    photos: [],
     pos: { top: 22, left: 30 },
     connections: ["member-2", "member-3", "member-4"]
   },
@@ -24,7 +32,7 @@ const INITIAL_MEMBERS = [
     name: "[MEMBER NAME 2]",
     degree: "[DEGREE / PROGRAM]",
     funFact: "[FUN FACT]",
-    photo: null,
+    photos: [],
     pos: { top: 22, left: 70 },
     connections: ["member-3", "member-5"]
   },
@@ -36,7 +44,7 @@ const INITIAL_MEMBERS = [
     name: "[MEMBER NAME 3]",
     degree: "[DEGREE / PROGRAM]",
     funFact: "[FUN FACT]",
-    photo: null,
+    photos: [],
     pos: { top: 52, left: 25 },
     connections: ["member-6"]
   },
@@ -45,10 +53,10 @@ const INITIAL_MEMBERS = [
     file: "04",
     role: "Inclusion Officer",
     dept: "ADVOCACY",
-    name: "[MEMBER NAME 4]",
-    degree: "[DEGREE / PROGRAM]",
-    funFact: "[FUN FACT]",
-    photo: null,
+    name: "Sana Irfan",
+    degree: "Computer Science",
+    funFact: "I can never say no to dessert",
+    photos: [Sana1],
     pos: { top: 52, left: 50 },
     connections: ["member-5", "member-6"]
   },
@@ -57,10 +65,10 @@ const INITIAL_MEMBERS = [
     file: "05",
     role: "Secretary",
     dept: "OPERATIONS",
-    name: "[MEMBER NAME 5]",
-    degree: "[DEGREE / PROGRAM]",
-    funFact: "[FUN FACT]",
-    photo: null,
+    name: "Pau Carrillo Velasco",
+    degree: "Computer Science",
+    funFact: "I’ve lived in 4 different continents",
+    photos: [Pau1, Pau2, Pau3],
     pos: { top: 52, left: 75 },
     connections: ["member-6"]
   },
@@ -69,10 +77,10 @@ const INITIAL_MEMBERS = [
     file: "06",
     role: "Lead Web Developer",
     dept: "DEVELOPMENT",
-    name: "[MEMBER NAME 6]",
-    degree: "[DEGREE / PROGRAM]",
-    funFact: "[FUN FACT]",
-    photo: null,
+    name: "Akram Awel",
+    degree: "Computer Science",
+    funFact: "Im secretly an alien",
+    photos: [Akram1, Akram2],
     pos: { top: 82, left: 50 },
     connections: []
   }
@@ -108,9 +116,18 @@ const AsciiCorners = memo(() => (
   </>
 ));
 
-const Portrait = memo(({ member }) => {
-  if (member.photo) {
-    return <img src={member.photo} alt={member.name} className="portrait-img" />;
+const Portrait = memo(({ member, photoIndex = 0 }) => {
+  const currentPhoto = member.photos && member.photos.length > 0 ? member.photos[photoIndex] : null;
+
+  if (currentPhoto) {
+    return (
+      <img
+        src={currentPhoto}
+        alt={member.name}
+        className="portrait-img"
+        draggable="false"
+      />
+    );
   }
   return (
     <div className="portrait-redacted" role="img" aria-label="No photo on file">
@@ -121,14 +138,34 @@ const Portrait = memo(({ member }) => {
   );
 });
 
+// Helper component to style glowing text for specific keywords
+const FormattedIntel = ({ text }) => {
+  if (!text) return null;
+  const parts = text.split(/(alien)/gi);
+  return (
+    <>
+      {parts.map((part, i) =>
+        part.toLowerCase() === "alien" ? (
+          <span key={i} className="glowing-alien">
+            {part}
+          </span>
+        ) : (
+          part
+        )
+      )}
+    </>
+  );
+};
+
 export default function Committee() {
   const [members, setMembers] = useState(INITIAL_MEMBERS);
   const [activeId, setActiveId] = useState(null);
+  const [activePhotoIndex, setActivePhotoIndex] = useState(0);
   const [closing, setClosing] = useState(false);
   const [hoveredId, setHoveredId] = useState(null);
   const [deptFilter, setDeptFilter] = useState("ALL UNITS");
   const [entryMode, setEntryMode] = useState("open");
-  
+
   const [boardZoomed, setBoardZoomed] = useState(false);
   const [zoomVars, setZoomVars] = useState({ "--zoom-x": "50%", "--zoom-y": "50%" });
 
@@ -155,6 +192,7 @@ export default function Committee() {
     openTimestampRef.current = Date.now();
     setClosing(false);
     setEntryMode("open");
+    setActivePhotoIndex(0);
     setZoomVars({ "--zoom-x": `${member.pos.left}%`, "--zoom-y": `${member.pos.top}%` });
     setBoardZoomed(true);
     setActiveId(member.id);
@@ -163,10 +201,11 @@ export default function Committee() {
   const closeFile = useCallback(() => {
     setClosing((isAlreadyClosing) => {
       if (isAlreadyClosing) return true;
-      
+
       setBoardZoomed(false);
       window.setTimeout(() => {
         setActiveId(null);
+        setActivePhotoIndex(0);
         setClosing(false);
         if (triggerRef.current) triggerRef.current.focus();
       }, 300);
@@ -174,6 +213,13 @@ export default function Committee() {
       return true;
     });
   }, []);
+
+  const handleCyclePhoto = (e) => {
+    e.stopPropagation();
+    if (activeMember && activeMember.photos && activeMember.photos.length > 1) {
+      setActivePhotoIndex((prevIndex) => (prevIndex + 1) % activeMember.photos.length);
+    }
+  };
 
   const handlePointerDown = (member, event) => {
     if (event.button !== undefined && event.button !== 0) return;
@@ -227,9 +273,10 @@ export default function Committee() {
       let nextIndex = activeIndex + direction;
       if (nextIndex < 0) nextIndex = visibleMembers.length - 1;
       if (nextIndex >= visibleMembers.length) nextIndex = 0;
-      
+
       const nextMember = visibleMembers[nextIndex];
       setEntryMode(direction > 0 ? "next" : "prev");
+      setActivePhotoIndex(0);
       setZoomVars({ "--zoom-x": `${nextMember.pos.left}%`, "--zoom-y": `${nextMember.pos.top}%` });
       setActiveId(nextMember.id);
     },
@@ -242,7 +289,6 @@ export default function Committee() {
     }
   }, [activeId]);
 
-  // Capture phase listener (`true`) guarantees Firefox processes the ESC key
   useEffect(() => {
     if (!activeId) return;
     const onKey = (e) => {
@@ -318,11 +364,7 @@ export default function Committee() {
 
         <div className="board-frame ascii-box">
           <AsciiCorners />
-          <div 
-            className={`board ${boardZoomed ? "is-zoomed" : ""}`} 
-            ref={boardRef}
-            style={zoomVars}
-          >
+          <div className={`board ${boardZoomed ? "is-zoomed" : ""}`} ref={boardRef} style={zoomVars}>
             <svg className="board-strings" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
               {stringConnections.map((s) => {
                 const isConnected = hoveredId === s.fromId || hoveredId === s.toId;
@@ -357,7 +399,7 @@ export default function Committee() {
                       <AsciiCorners />
                       <div className="pin-photo-frame">
                         <span className="pin-id">N-{m.file}</span>
-                        <Portrait member={m} />
+                        <Portrait member={m} photoIndex={0} />
                         <span className="pin-hint">&gt;&gt; open</span>
                       </div>
                     </div>
@@ -393,10 +435,10 @@ export default function Committee() {
                     {activeMember.file} — {activeMember.role.toUpperCase()}
                   </span>
                   <span className="dossier-flag">RESTRICTED</span>
-                  <button 
+                  <button
                     type="button"
-                    ref={closeBtnRef} 
-                    className="dossier-close" 
+                    ref={closeBtnRef}
+                    className="dossier-close"
                     onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
@@ -408,10 +450,22 @@ export default function Committee() {
                 </div>
 
                 <div className="dossier-body">
-                  <div className="dossier-portrait-frame ascii-box">
+                  <div
+                    className={`dossier-portrait-frame ascii-box ${activeMember.photos?.length > 1 ? "is-clickable" : ""}`}
+                    onClick={handleCyclePhoto}
+                  >
                     <AsciiCorners />
-                    <Portrait member={activeMember} />
-                    <div className="portrait-caption">{activeMember.photo ? "ON FILE" : "NO IMAGE ON FILE"}</div>
+                    <Portrait member={activeMember} photoIndex={activePhotoIndex} />
+
+                    {activeMember.photos?.length > 1 && (
+                      <div className="photo-cycle-indicator">
+                        [ ↺ CLICK TO CYCLE ({activePhotoIndex + 1}/{activeMember.photos.length}) ]
+                      </div>
+                    )}
+
+                    <div className="portrait-caption">
+                      {activeMember.photos?.length > 0 ? "" : "NO IMAGE ON FILE"}
+                    </div>
                   </div>
 
                   <div className="dossier-footer">
@@ -433,8 +487,10 @@ export default function Committee() {
                         <span className="field-value">{activeMember.degree}</span>
                       </div>
                       <div className="field-row field-row--note">
-                        <span className="field-label">INTEL</span>
-                        <span className="field-value">{activeMember.funFact}</span>
+                        <span className="field-label">Funfact</span>
+                        <span className="field-value">
+                          <FormattedIntel text={activeMember.funFact} />
+                        </span>
                       </div>
                     </div>
                   </div>
