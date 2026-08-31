@@ -9,18 +9,22 @@ import Pau2 from "../Assets/Pau2.jpeg";
 import Pau3 from "../Assets/Pau3.jpeg";
 import Akram1 from "../Assets/Akram1.png";
 import Akram2 from "../Assets/Akram2.png";
+import Amelia1 from "../Assets/Amelia1.jpeg";
+import Amelia2 from "../Assets/Amelia2.jpeg";
+import Amelia3 from "../Assets/Amelia3.jpeg";
+import Amelia4 from "../Assets/Amelia4.jpeg";
 
 // ── MEMBER DATA ──────────────────────────────────────────────────
 const INITIAL_MEMBERS = [
   {
     id: "member-1",
     file: "01",
-    role: "Co-Chief",
+    role: "Founder / Co-Chief",
     dept: "EXECUTIVE",
-    name: "[MEMBER NAME 1]",
-    degree: "[DEGREE / PROGRAM]",
-    funFact: "[FUN FACT]",
-    photos: [],
+    name: "Amelia Javed",
+    degree: "Computer Science",
+    funFact: "You’re on my watchlist",
+    photos: [Amelia1, Amelia2, Amelia3, Amelia4],
     pos: { top: 22, left: 30 },
     connections: ["member-2", "member-3", "member-4"]
   },

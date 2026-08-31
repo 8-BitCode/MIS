@@ -135,6 +135,101 @@ function CountUpValue({ value }) {
   return <span ref={ref}>{display}</span>;
 }
 
+// Scroll-linked progress (0 → 1) for how far a node has travelled through
+// a "reveal window" in the viewport. Used to drive the redaction peel.
+// `revealStart`/`revealEnd` are fractions of viewport height measured from
+// the top: progress hits 0 when the node's top is at `revealStart` and 1
+// once it reaches `revealEnd`. A tighter window (smaller gap between the
+// two) means less scrolling is needed to fully declassify — useful for
+// content further down the page where there's less room left to scroll.
+function useScrollProgress(ref, revealStart = 0.92, revealEnd = 0.5) {
+  const [progress, setProgress] = useState(0);
+  const rafRef = useRef(null);
+
+  useEffect(() => {
+    const node = ref.current;
+    if (!node) return;
+
+    const compute = () => {
+      rafRef.current = null;
+      const rect = node.getBoundingClientRect();
+      const vh = window.innerHeight || document.documentElement.clientHeight;
+      const doc = document.documentElement;
+      const maxScroll = doc.scrollHeight - vh;
+      const atBottom = maxScroll <= 0 || window.scrollY >= maxScroll - 2;
+
+      // Once the page itself can't scroll any further, force full reveal —
+      // otherwise content near the bottom (which never reaches the normal
+      // "end" trigger position because there's no more room to scroll)
+      // would stay stuck partially redacted forever.
+      if (atBottom) {
+        setProgress(1);
+        return;
+      }
+
+      const start = vh * revealStart;
+      const end = vh * revealEnd;
+      const raw = (start - rect.top) / (start - end);
+      setProgress(Math.min(1, Math.max(0, raw)));
+    };
+
+    const onScroll = () => {
+      if (rafRef.current == null) {
+        rafRef.current = requestAnimationFrame(compute);
+      }
+    };
+
+    compute();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+      if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
+    };
+  }, [ref, revealStart, revealEnd]);
+
+  return progress;
+}
+
+// RedactedText — renders `text` word-by-word, each hidden under a
+// redaction bar. As the paragraph scrolls up through the viewport, the
+// bars peel off left-to-right in step with scroll position, "declassifying"
+// the copy in real time rather than on a single mount/visibility trigger.
+// `variant`: "solid" (default, flat black bar — briefing text & case
+// index) or "stripe" (diagonal hatch, matching the stat cards' own
+// declassify-tape look) so different sections don't all peel identically.
+function RedactedText({
+  text,
+  className = "",
+  tag: Tag = "p",
+  style,
+  revealStart = 0.92,
+  revealEnd = 0.5,
+  variant = "solid",
+}) {
+  const ref = useRef(null);
+  const progress = useScrollProgress(ref, revealStart, revealEnd);
+  const words = React.useMemo(() => text.split(" "), [text]);
+  const revealCount = Math.floor(progress * words.length);
+
+  return (
+    <Tag ref={ref} className={`redacted-text redacted-text--${variant} ${className}`} style={style}>
+      {words.map((w, i) => (
+        <span
+          className={`redact-word ${i < revealCount ? "is-declassified" : ""}`}
+          key={i}
+          style={{ '--word-i': i }}
+        >
+          {w}
+          <span className="redact-bar" aria-hidden="true" />
+          {i < words.length - 1 ? " " : ""}
+        </span>
+      ))}
+    </Tag>
+  );
+}
+
 function Declassify({ children, className = "", tag: Tag = "div", style }) {
   const ref = useRef(null);
   const [revealed, setRevealed] = useState(false);
@@ -345,23 +440,15 @@ export default function Home() {
               <DecryptText text="WHAT IS M.I.S.?" trigger="visible" delay={600} speed={25} />
             </h2>
 
-            <p className="briefing-text">
-              The Manchester Intelligence Society (MIS) is the North West's
-              first university-level intelligence society, founded in 2025 at
-              The University of Manchester. We bridge the gap between
-              academic learning, practical skills, and the wider intelligence
-              and national security community — bringing together members
-              from computer science, politics, international relations,
-              history, literature, and beyond.
-            </p>
+            <RedactedText
+              className="briefing-text"
+              text="The Manchester Intelligence Society (MIS) is the North West's first university-level intelligence society, founded in 2025 at The University of Manchester. We bridge the gap between academic learning, practical skills, and the wider intelligence and national security community — bringing together members from computer science, politics, international relations, history, literature, and beyond."
+            />
 
-            <p className="briefing-text">
-              We build critical thinking, analytical, and decision-making
-              skills through hands-on events spanning OSINT, cyber, and
-              national security — from workshops and speaker panels to our
-              signature hackathon — preparing students for real careers in
-              intelligence, cyber, and business intelligence.
-            </p>
+            <RedactedText
+              className="briefing-text"
+              text="We build critical thinking, analytical, and decision-making skills through hands-on events spanning OSINT, cyber, and national security — from workshops and speaker panels to our signature hackathon — preparing students for real careers in intelligence, cyber, and business intelligence."
+            />
 
             <div className="briefing-tags">
               <span className="tag staggered-fade" style={{ '--stagger': 1 }}>
@@ -399,7 +486,14 @@ export default function Home() {
                 <span className="stat-value">
                   <CountUpValue value={s.value} />
                 </span>
-                <span className="stat-label">{s.label}</span>
+                <RedactedText
+                  tag="span"
+                  className="stat-label"
+                  text={s.label}
+                  revealStart={0.92}
+                  revealEnd={0.55}
+                  variant="stripe"
+                />
                 <span className="stat-redact" aria-hidden="true" />
               </Declassify>
             ))}
@@ -431,8 +525,20 @@ export default function Home() {
                   <span className="case-code">FILE {c.code}</span>
                   <span className="case-open">OPEN &gt;</span>
                 </div>
-                <h3 className="case-title">{c.title}</h3>
-                <p className="case-blurb">{c.blurb}</p>
+                <RedactedText
+                  tag="h3"
+                  className="case-title"
+                  text={c.title}
+                  revealStart={1.0}
+                  revealEnd={0.8}
+                />
+                <RedactedText
+                  tag="p"
+                  className="case-blurb"
+                  text={c.blurb}
+                  revealStart={1.0}
+                  revealEnd={0.8}
+                />
                 <div className="case-scanner-line" aria-hidden="true" />
               </Link>
             ))}

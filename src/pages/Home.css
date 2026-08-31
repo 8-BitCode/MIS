@@ -586,6 +586,72 @@ body:has(.home-page)::-webkit-scrollbar {
   margin: 0 0 1rem;
 }
 
+/* ── Redaction Peel — scroll-linked declassify effect ─────────────
+   Each word sits under a solid black bar. As the paragraph travels
+   through the viewport on scroll, bars retract left→right (origin
+   fixed on the right) revealing the text beneath, like a document
+   being declassified line by line as you read down the page. */
+.redacted-text {
+  max-width: 46rem;
+  font-size: 0.8rem;
+  line-height: 1.85;
+  color: var(--fg-dim);
+  margin: 0 0 1rem;
+}
+
+.redact-word {
+  position: relative;
+  display: inline-block;
+  white-space: pre-wrap;
+}
+
+.redact-bar {
+  position: absolute;
+  inset: -1px -3px;
+  z-index: 1;
+  background: #050604;
+  border: 1px solid rgba(61, 220, 132, 0.18);
+  transform-origin: right center;
+  transform: scaleX(1);
+  transition: transform 0.4s cubic-bezier(0.65, 0, 0.35, 1);
+  pointer-events: none;
+}
+
+.redact-word.is-declassified .redact-bar {
+  transform: scaleX(0);
+  transition-delay: calc(var(--word-i, 0) * 4ms);
+}
+
+/* Stripe variant — used on the stat cards so their reveal reads as a
+   continuation of the diagonal declassify-tape already used on the card
+   itself, rather than repeating the flat black bar seen elsewhere. It
+   peels upward (scaleY, origin bottom) instead of sideways, and uses a
+   hatched fill instead of a flat fill. */
+.redact-bar--stripe {
+  background: repeating-linear-gradient(
+    135deg,
+    var(--line-soft) 0px,
+    var(--line-soft) 4px,
+    var(--panel) 4px,
+    var(--panel) 8px
+  );
+  border-color: rgba(255, 255, 255, 0.06);
+  transform-origin: bottom center;
+  transform: scaleY(1);
+  transition: transform 0.5s cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+.redact-word.is-declassified .redact-bar--stripe {
+  transform: scaleY(0);
+  transition-delay: calc(var(--word-i, 0) * 30ms);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .redact-bar {
+    transition: none;
+  }
+}
+
 .briefing-tags {
   display: flex;
   flex-wrap: wrap;
@@ -669,6 +735,19 @@ body:has(.home-page)::-webkit-scrollbar {
   color: var(--fg-dim);
 }
 
+/* Reset the generic .redacted-text block sizing so the word-redaction
+   effect fits cleanly inside the small stat card rather than inheriting
+   the wide paragraph defaults. */
+.stat-label.redacted-text {
+  margin: 0.35rem 0 0;
+  max-width: none;
+  line-height: 1.5;
+}
+
+.stat-card .redact-bar {
+  border-color: color-mix(in srgb, var(--stat-accent, var(--accent)) 35%, transparent);
+}
+
 /* Sequential Stat Decoding based on index */
 .stat-redact {
   position: absolute;
@@ -690,14 +769,12 @@ body:has(.home-page)::-webkit-scrollbar {
   transition-delay: calc(var(--stagger, 0) * 120ms);
 }
 
-.declassify:not(.is-revealed) .stat-value,
-.declassify:not(.is-revealed) .stat-label {
+.declassify:not(.is-revealed) .stat-value {
   opacity: 0;
   transform: translateY(4px);
 }
 
-.declassify.is-revealed .stat-value,
-.declassify.is-revealed .stat-label {
+.declassify.is-revealed .stat-value {
   opacity: 1;
   transform: translateY(0);
   transition: opacity 0.4s ease, transform 0.4s ease;
@@ -785,6 +862,12 @@ body:has(.home-page)::-webkit-scrollbar {
   font-size: 0.7rem;
   line-height: 1.6;
   color: var(--fg-dim);
+}
+
+/* Case cards tint their redaction bars with their own accent so each
+   file feels like a distinct dossier being declassified. */
+.case-card .redact-bar {
+  border-color: color-mix(in srgb, var(--card-accent, var(--accent)) 35%, transparent);
 }
 
 /* Scanner line hover effect */
