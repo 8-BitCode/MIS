@@ -12,7 +12,6 @@ import Akram2 from "../Assets/Akram2.png";
 import Amelia1 from "../Assets/Amelia1.jpeg";
 import Amelia2 from "../Assets/Amelia2.jpeg";
 import Amelia3 from "../Assets/Amelia3.jpeg";
-import Amelia4 from "../Assets/Amelia4.jpeg";
 import Viral1 from "../Assets/Viral1.png"
 import Viral2 from "../Assets/Viral2.png"
 import Viral3 from "../Assets/Viral3.png"
@@ -25,10 +24,10 @@ const INITIAL_MEMBERS = [
     file: "01",
     role: "Founder / Co-Chief",
     dept: "EXECUTIVE",
-    name: "Amelia Javed",
+    name: "Amelia",
     degree: "Computer Science",
     funFact: "You’re on my watchlist",
-    photos: [Amelia1, Amelia2, Amelia3, Amelia4],
+    photos: [Amelia1, Amelia2, Amelia3],
     pos: { top: 22, left: 30 },
     connections: ["member-2", "member-3", "member-4"]
   },
@@ -85,7 +84,7 @@ const INITIAL_MEMBERS = [
     file: "06",
     role: "Lead Web Developer",
     dept: "DEVELOPMENT",
-    name: "Akram Awel",
+    name: "Akram",
     degree: "Computer Science",
     funFact: "Im secretly an alien",
     photos: [Akram1, Akram2],
