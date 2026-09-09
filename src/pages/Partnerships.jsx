@@ -483,6 +483,8 @@ export default function Partnerships() {
   const orgRef = useRef(null);
   const emailRef = useRef(null);
   const briefRef = useRef(null);
+  const honeyRef = useRef(null);
+  const lastSubmitRef = useRef(0);
 
   const activeSponsorData = SPONSOR_NODES.find(s => s.id === selectedSponsor);
 
@@ -502,6 +504,24 @@ export default function Partnerships() {
 
 const handleTender = async (e) => {
     e.preventDefault();
+
+    // Honeypot: a real visitor never sees or fills this field. If it's
+    // populated, silently drop the submission — no error state, no relay
+    // call, no mailto fallback. Bots that blindly fill every input get a
+    // no-op instead of a hint that they were caught.
+    if (honeyRef.current?.value) {
+      return;
+    }
+
+    // Basic client-side throttle to blunt scripted repeat-submission spam.
+    // Not a substitute for server-side protection, but stops the easy case.
+    const now = Date.now();
+    if (now - lastSubmitRef.current < 30000) {
+      setSendState("throttled");
+      setTenderSubmitted(false);
+      return;
+    }
+    lastSubmitRef.current = now;
 
     const tier = SPONSOR_TIERS.find((t) => t.id === selectedTier);
     const orgName = orgRef.current?.value?.trim() || "UNIDENTIFIED CONTRACTOR";
@@ -544,6 +564,7 @@ ${orgName}`;
           _subject: specificTitle,
           _template: "box",
           _replyto: contactEmail,
+          _captcha: "true",
           Organization: orgName,
           "Contact Email": contactEmail,
           Tier: `${tier?.name || "Unspecified"} (${tier?.price || "N/A"})`,
@@ -747,6 +768,25 @@ ${orgName}`;
           <div className="panel-bar">&gt; SUBMIT TENDER / TRANSMIT PROPOSAL</div>
 
           <form className="tender-form" onSubmit={handleTender}>
+            {/* Honeypot — hidden from sighted users and skipped by screen
+                readers via aria-hidden + tabIndex=-1. Bots that auto-fill
+                every field will populate this; humans never will. */}
+            <input
+              ref={honeyRef}
+              type="text"
+              name="_honey"
+              aria-hidden="true"
+              tabIndex="-1"
+              autoComplete="off"
+              style={{
+                position: "absolute",
+                left: "-9999px",
+                width: "1px",
+                height: "1px",
+                opacity: 0
+              }}
+            />
+
             <div className="form-grid">
               <div className="form-group">
                 <label>&gt; ORGANIZATION / CONTRACTOR</label>
@@ -782,6 +822,11 @@ ${orgName}`;
               {sendState === "failed" && (
                 <span className="submit-msg submit-msg-warn">
                   &gt; RELAY UNREACHABLE. FELL BACK TO YOUR MAIL CLIENT.
+                </span>
+              )}
+              {sendState === "throttled" && (
+                <span className="submit-msg submit-msg-warn">
+                  &gt; PLEASE WAIT BEFORE SUBMITTING ANOTHER TENDER.
                 </span>
               )}
             </div>
