@@ -224,6 +224,12 @@ export default function Committee() {
 
   const handleCyclePhoto = (e) => {
     e.stopPropagation();
+    // Guard against the synthetic "ghost click" browsers fire after a
+    // touch tap. On mobile, opening the dossier from a pin tap lands the
+    // photo frame right under the finger, so that trailing click event
+    // was landing here too and immediately advancing the photo. Ignore
+    // clicks that happen right after the dossier opens.
+    if (Date.now() - openTimestampRef.current < 300) return;
     if (activeMember && activeMember.photos && activeMember.photos.length > 1) {
       setActivePhotoIndex((prevIndex) => (prevIndex + 1) % activeMember.photos.length);
     }
