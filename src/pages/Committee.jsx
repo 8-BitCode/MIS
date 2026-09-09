@@ -71,8 +71,7 @@ const INITIAL_MEMBERS = [
   {
     id: "member-5",
     file: "05",
-    role: "Secretary",
-    dept: "OPERATIONS",
+    dept: ["OPERATIONS", "EXECUTIVE"],
     name: "Pau Carrillo Velasco",
     degree: "Computer Science",
     funFact: "I’ve lived in 4 different continents",
@@ -95,6 +94,15 @@ const INITIAL_MEMBERS = [
 ];
 
 const DEPARTMENTS = ["ALL UNITS", "EXECUTIVE", "OPERATIONS", "ADVOCACY", "DEVELOPMENT"];
+
+// Most members belong to a single unit (dept is a string), but some sit
+// across two (dept is an array, e.g. Pau: OPERATIONS + EXECUTIVE). This
+// normalizes both shapes for filtering.
+function matchesDept(member, filter) {
+  if (filter === "ALL UNITS") return true;
+  const depts = Array.isArray(member.dept) ? member.dept : [member.dept];
+  return depts.includes(filter);
+}
 
 const REDACT_TILES = Array.from({ length: 110 }, (_, i) => i);
 
@@ -186,7 +194,7 @@ export default function Committee() {
   const activeMember = useMemo(() => members.find((m) => m.id === activeId), [members, activeId]);
 
   const visibleMembers = useMemo(
-    () => members.filter((m) => deptFilter === "ALL UNITS" || m.dept === deptFilter),
+    () => members.filter((m) => matchesDept(m, deptFilter)),
     [members, deptFilter]
   );
 
@@ -399,7 +407,7 @@ export default function Committee() {
 
             <ul className="board-list" aria-label="Committee members board">
               {members.map((m) => {
-                const matchesFilter = deptFilter === "ALL UNITS" || m.dept === deptFilter;
+                const matchesFilter = matchesDept(m, deptFilter);
                 return (
                   <li
                     key={m.id}
