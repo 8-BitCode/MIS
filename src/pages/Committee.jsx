@@ -71,6 +71,7 @@ const INITIAL_MEMBERS = [
   {
     id: "member-5",
     file: "05",
+    role: "Secretary",
     dept: ["OPERATIONS", "EXECUTIVE"],
     name: "Pau Carrillo Velasco",
     degree: "Computer Science",
