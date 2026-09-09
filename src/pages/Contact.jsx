@@ -152,22 +152,8 @@ const CHANNELS = [
     height: 40,
   },
   {
-    id: "whatsapp",
-    code: "N-05",
-    glyph: "WA",
-    label: "WHATSAPP",
-    tag: "BROADCAST LIST",
-    desc: "Broadcast list for announcements and last-minute updates.",
-    display: "chat.whatsapp.com/FTGb…59Gs",
-    href: "https://chat.whatsapp.com/FTGbKuhj0OJ9eHVsnO59Gs",
-    external: true,
-    angleDeg: 330,
-    radius: 95,
-    height: 40,
-  },
-  {
     id: "linktree",
-    code: "N-06",
+    code: "N-05", // Shifted code index since WhatsApp was removed
     glyph: "::",
     label: "LINKTREE",
     tag: "MASTER INDEX",
@@ -175,7 +161,7 @@ const CHANNELS = [
     display: "linktr.ee/manchester.intelligence",
     href: "https://linktr.ee/manchester.intelligence",
     external: true,
-    angleDeg: 30,
+    angleDeg: 330, // Adjusted angle distribution to fill the gap cleanly
     radius: 95,
     height: 40,
   },
@@ -183,7 +169,7 @@ const CHANNELS = [
 
 const CALENDLY = {
   id: "calendly",
-  code: "N-07",
+  code: "N-06",
   glyph: "??",
   label: "BOOK A SLOT",
   tag: "PENDING SETUP",
@@ -435,10 +421,6 @@ export default function Contact() {
   const handleNodeLeave = useCallback((c) => {
     setIsHoveringNode(false);
     if (supportsHover && !transmittingNode) {
-      // Give the pointer a beat to land on another node before clearing,
-      // so hopping between adjacent nodes doesn't flicker the readout —
-      // but if nothing is hovered anymore, release the active channel
-      // so auto-rotation resumes.
       setTimeout(() => {
         if (!document.querySelector('.node-chip:hover')) {
           clearChannel(c.id);
@@ -516,8 +498,6 @@ export default function Contact() {
   }, [activeNodeGeom, seqProgress, hubGeom.top]);
 
   const bearing = Math.round((((theta * 180) / Math.PI) % 360 + 360) % 360);
-
-  // Calculate charge level based on hover state
   const chargeLevel = isHoveringNode && !transmittingNode ? 1 : 0;
 
   return (
@@ -537,8 +517,8 @@ export default function Contact() {
           </div>
           <p className="relay-eyebrow"><span className="rec-dot" aria-hidden="true" />TRANSMISSION HUB · CLEARANCE: PUBLIC</p>
           <h1 className="relay-h1"><span className="prompt">&gt;</span><DecryptText text="OPEN A CHANNEL" trigger="mount" speed={30} /></h1>
-          <p className="relay-sub">Six live masts on the relay field. Companies and organisations — route enquiries through <strong>email</strong>.</p>
-          <p className="relay-status">SIGNAL STATUS: <span className="ok">6 CHANNELS LIVE</span> · <span className="pending">1 PENDING SETUP</span> · <span className="bearing">BEARING {String(bearing).padStart(3, "0")}°</span></p>
+          <p className="relay-sub">Live masts on the relay field. Companies and organisations — route enquiries through <strong>email</strong>.</p>
+          <p className="relay-status">SIGNAL STATUS: <span className="ok">5 CHANNELS LIVE</span> · <span className="pending">1 PENDING SETUP</span> · <span className="bearing">BEARING {String(bearing).padStart(3, "0")}°</span></p>
         </header>
 
         <section className="relay-main" style={viewMode === "list" ? { gridTemplateColumns: "1fr" } : undefined}>
@@ -587,12 +567,8 @@ export default function Contact() {
                       ))}
                     </g>
 
-                    {/* ── Signal Burst Effect ── */}
                     {signalBurst && (
-                      <g className="signal-burst" style={{ 
-                        opacity: 1,
-                        animation: 'burst-fade 0.8s ease-out forwards'
-                      }}>
+                      <g className="signal-burst" style={{ opacity: 1, animation: 'burst-fade 0.8s ease-out forwards' }}>
                         {[0, 1, 2, 3, 4, 5, 6, 7].map((i) => {
                           const angle = (i / 8) * Math.PI * 2;
                           const radius = 30 + i * 8;
@@ -606,99 +582,10 @@ export default function Contact() {
                               stroke={i % 2 === 0 ? '#39d0ff' : '#ffcf5c'}
                               strokeWidth={1.5 - i * 0.15}
                               opacity={0.8 - i * 0.08}
-                              style={{
-                                animation: `burst-wave ${0.6 + i * 0.05}s ease-out forwards`,
-                                transform: `scale(${1 + i * 0.15})`,
-                              }}
+                              style={{ animation: `burst-wave ${0.6 + i * 0.05}s ease-out forwards`, transform: `scale(${1 + i * 0.15})` }}
                             />
                           );
                         })}
-                        {/* Concentric rings */}
-                        {[1, 2, 3].map((i) => (
-                          <circle
-                            key={`ring-${i}`}
-                            cx={hubGeom.top.x}
-                            cy={hubGeom.top.y}
-                            r={i * 20}
-                            fill="none"
-                            stroke="#39d0ff"
-                            strokeWidth={1.5 - i * 0.3}
-                            opacity={0.6 - i * 0.15}
-                            style={{
-                              animation: `burst-ring ${0.4 + i * 0.1}s ease-out forwards`,
-                            }}
-                          />
-                        ))}
-                        {/* Central flash */}
-                        <circle
-                          cx={hubGeom.top.x}
-                          cy={hubGeom.top.y}
-                          r={8}
-                          fill="#fff"
-                          opacity={0.9}
-                          style={{
-                            animation: 'burst-flash 0.3s ease-out forwards',
-                          }}
-                        />
-                        <style dangerouslySetInnerHTML={{
-                          __html: `
-                            @keyframes burst-ring {
-                              0% { transform: scale(0.3); opacity: 0; }
-                              30% { opacity: 0.8; }
-                              100% { transform: scale(1.5); opacity: 0; }
-                            }
-                            @keyframes burst-wave {
-                              0% { transform: scale(0.5); opacity: 0; }
-                              20% { opacity: 1; }
-                              100% { transform: scale(2); opacity: 0; }
-                            }
-                            @keyframes burst-flash {
-                              0% { transform: scale(0.5); opacity: 0; }
-                              50% { transform: scale(1.5); opacity: 1; }
-                              100% { transform: scale(0.8); opacity: 0.3; }
-                            }
-                            @keyframes burst-fade {
-                              0% { opacity: 1; }
-                              100% { opacity: 0; }
-                            }
-                          `
-                        }} />
-                      </g>
-                    )}
-
-                    {transmittingNode && activeNodeGeom && seqProgress < SEQ_HANDSHAKE && (
-                      <g
-                        className="target-acquisition-beam"
-                        style={{
-                          opacity:
-                            seqProgress < SEQ_ROUTE
-                              ? 1
-                              : Math.max(0, 1 - (seqProgress - SEQ_ROUTE) / (SEQ_HANDSHAKE - SEQ_ROUTE)),
-                        }}
-                      >
-                        <line
-                          x1={activeNodeGeom.top.x}
-                          y1="0"
-                          x2={activeNodeGeom.top.x}
-                          y2={activeNodeGeom.top.y}
-                          className="laser-beam"
-                        />
-                        <circle cx={activeNodeGeom.top.x} cy={activeNodeGeom.top.y} r="14" className="target-reticle-ring r1" />
-                        <circle cx={activeNodeGeom.top.x} cy={activeNodeGeom.top.y} r="21" className="target-reticle-ring r2" />
-                        <line
-                          x1={activeNodeGeom.top.x - 26}
-                          y1={activeNodeGeom.top.y}
-                          x2={activeNodeGeom.top.x + 26}
-                          y2={activeNodeGeom.top.y}
-                          className="target-crosshair"
-                        />
-                        <line
-                          x1={activeNodeGeom.top.x}
-                          y1={activeNodeGeom.top.y - 26}
-                          x2={activeNodeGeom.top.x}
-                          y2={activeNodeGeom.top.y + 26}
-                          className="target-crosshair"
-                        />
                       </g>
                     )}
 
@@ -724,22 +611,8 @@ export default function Contact() {
                     {payloadPos && (
                       <circle cx={payloadPos.x} cy={payloadPos.y} r="3.5" className="routing-payload" />
                     )}
-
-                    {activeNodeGeom && seqProgress >= 0.4 && (
-                      <g
-                        className="crypto-handshake"
-                        transform={`translate(${activeNodeGeom.top.x}, ${activeNodeGeom.top.y}) scale(${Math.min(1, (seqProgress - 0.4) / 0.15)})`}
-                      >
-                        <path d="M -12 -6 L -12 -12 L -6 -12" className="crypto-bracket" />
-                        <path d="M 12 -6 L 12 -12 L 6 -12" className="crypto-bracket" />
-                        <path d="M -12 6 L -12 12 L -6 12" className="crypto-bracket" />
-                        <path d="M 12 6 L 12 12 L 6 12" className="crypto-bracket" />
-                        <circle cx="0" cy="0" r="18" className="crypto-ring" />
-                      </g>
-                    )}
                   </svg>
 
-                  {/* ── Transmitter with Charge Effect ── */}
                   <div 
                     className="signal-transmitter"
                     style={{ 
@@ -755,7 +628,6 @@ export default function Contact() {
                       gap: '1px',
                     }}
                   >
-                    {/* Charge ring */}
                     <div style={{
                       position: 'absolute',
                       width: '40px',
@@ -767,95 +639,20 @@ export default function Contact() {
                       transform: `translate(-50%, -50%) scale(${1 + chargeLevel * 0.3})`,
                       opacity: 0.2 + chargeLevel * 0.5,
                       transition: 'all 0.3s ease',
-                      boxShadow: chargeLevel > 0 ? '0 0 30px rgba(57, 208, 255, 0.2)' : 'none',
                     }} />
-                    
-                    {/* Antenna mast with charge glow */}
                     <div style={{
                       width: '2px',
                       height: `${12 + chargeLevel * 8}px`,
-                      background: chargeLevel > 0 
-                        ? `linear-gradient(to top, #39d0ff, ${chargeLevel > 0.5 ? '#ffcf5c' : '#39d0ff'})`
-                        : '#39d0ff',
-                      boxShadow: chargeLevel > 0 
-                        ? `0 0 ${15 + chargeLevel * 15}px rgba(57, 208, 255, ${0.3 + chargeLevel * 0.4})`
-                        : '0 0 8px rgba(57, 208, 255, 0.3)',
+                      background: '#39d0ff',
                       borderRadius: '1px',
-                      transition: 'all 0.3s ease',
                     }} />
-                    
-                    {/* Signal dot / emitter with charge state */}
                     <div style={{
-                      width: `${6 + chargeLevel * 4}px`,
-                      height: `${6 + chargeLevel * 4}px`,
+                      width: '6px',
+                      height: '6px',
                       borderRadius: '50%',
-                      background: chargeLevel > 0.7 
-                        ? 'radial-gradient(circle at 50% 50%, #ffcf5c, #39d0ff)'
-                        : chargeLevel > 0 
-                          ? 'radial-gradient(circle at 50% 50%, #39d0ff, #39d0ff)'
-                          : '#39d0ff',
-                      boxShadow: chargeLevel > 0 
-                        ? `0 0 ${20 + chargeLevel * 20}px rgba(57, 208, 255, ${0.4 + chargeLevel * 0.5})`
-                        : '0 0 12px rgba(57, 208, 255, 0.5)',
-                      animation: chargeLevel > 0 
-                        ? 'transmitter-charge 0.8s ease-in-out infinite' 
-                        : 'transmitter-pulse 2s ease-in-out infinite',
-                      transition: 'all 0.3s ease',
+                      background: '#39d0ff',
                     }} />
-                    
-                    {/* Small base plate */}
-                    <div style={{
-                      width: `${14 + chargeLevel * 4}px`,
-                      height: '3px',
-                      background: chargeLevel > 0 
-                        ? 'rgba(57, 208, 255, 0.3)' 
-                        : 'rgba(31, 47, 49, 0.8)',
-                      border: `1px solid ${chargeLevel > 0 ? 'rgba(57, 208, 255, 0.4)' : 'rgba(57, 208, 255, 0.15)'}`,
-                      borderRadius: '1px',
-                      marginTop: '1px',
-                      transition: 'all 0.3s ease',
-                    }} />
-                    
-                    {/* Tiny label */}
-                    <span style={{
-                      fontSize: '0.35rem',
-                      letterSpacing: '0.08em',
-                      color: chargeLevel > 0 
-                        ? 'rgba(57, 208, 255, 0.8)' 
-                        : 'rgba(205, 216, 210, 0.3)',
-                      marginTop: '2px',
-                      fontFamily: '"IBM Plex Mono", monospace',
-                      transition: 'all 0.3s ease',
-                    }}>
-                      {chargeLevel > 0 ? '⚡ CHARGING' : 'RELAY'}
-                    </span>
                   </div>
-
-                  {/* Add the animations to CSS via style tag */}
-                  <style dangerouslySetInnerHTML={{
-                    __html: `
-                      @keyframes transmitter-pulse {
-                        0%, 100% { 
-                          opacity: 1;
-                          transform: scale(1);
-                        }
-                        50% { 
-                          opacity: 0.6;
-                          transform: scale(0.85);
-                        }
-                      }
-                      @keyframes transmitter-charge {
-                        0%, 100% { 
-                          transform: scale(1);
-                          box-shadow: 0 0 20px rgba(57, 208, 255, 0.6);
-                        }
-                        50% { 
-                          transform: scale(1.15);
-                          box-shadow: 0 0 40px rgba(57, 208, 255, 0.9), 0 0 60px rgba(255, 207, 92, 0.3);
-                        }
-                      }
-                    `
-                  }} />
 
                   <ul className="node-list" aria-label="Contact channels">
                     {allNodes.map((c, idx) => {
@@ -884,7 +681,6 @@ export default function Contact() {
                       );
                     })}
 
-                    {/* ── 3D Projected Floating HUD Card ── */}
                     {transmittingNode && activeNodeGeom && (
                       <li
                         className="node-wrapper node-3d-hud-wrapper"
@@ -974,7 +770,6 @@ export default function Contact() {
               </aside>
             </>
           ) : (
-            /* ── Fully Wired Mobile / List Mode ── */
             <div className="relay-list-mode">
               <ul className="mobile-chain">
                 {[...CHANNELS, CALENDLY].map((c) => {
