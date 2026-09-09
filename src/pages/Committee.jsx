@@ -7,11 +7,12 @@ import Sana1 from "../Assets/Sana1.jpeg";
 import Pau1 from "../Assets/Pau1.jpeg";
 import Pau2 from "../Assets/Pau2.jpeg";
 import Pau3 from "../Assets/Pau3.jpeg";
+import Pau4 from "../Assets/Pau4.jpeg";
+import Pau5 from "../Assets/Pau5.jpeg";
 import Akram1 from "../Assets/Akram1.png";
 import Akram2 from "../Assets/Akram2.png";
 import Amelia1 from "../Assets/Amelia1.jpeg";
 import Amelia2 from "../Assets/Amelia2.jpeg";
-import Amelia3 from "../Assets/Amelia3.jpeg";
 import Viral1 from "../Assets/Viral1.png"
 import Viral2 from "../Assets/Viral2.png"
 import Viral3 from "../Assets/Viral3.png"
@@ -27,7 +28,7 @@ const INITIAL_MEMBERS = [
     name: "Amelia",
     degree: "Computer Science",
     funFact: "You’re on my watchlist",
-    photos: [Amelia1, Amelia2, Amelia3],
+    photos: [Amelia1, Amelia2],
     pos: { top: 22, left: 30 },
     connections: ["member-2", "member-3", "member-4"]
   },
@@ -75,7 +76,7 @@ const INITIAL_MEMBERS = [
     name: "Pau Carrillo Velasco",
     degree: "Computer Science",
     funFact: "I’ve lived in 4 different continents",
-    photos: [Pau1, Pau2, Pau3],
+    photos: [Pau1, Pau2, Pau3, Pau4, Pau5],
     pos: { top: 52, left: 75 },
     connections: ["member-6"]
   },
