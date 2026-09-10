@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState, memo } from "react";
 import Nav from "./Nav";
-import DecryptText from "./DecryptText";
+import { markStage, isTypingTarget } from "./clearance";import DecryptText from "./DecryptText";
 import "./Partnerships.css";
 
 // Receiving inbox for tender transmissions.
@@ -472,6 +472,23 @@ const SPONSOR_TIERS = [
 ];
 
 export default function Partnerships() {
+  // ── TEMP / PLACEHOLDER ─────────────────────────────────────────
+  // Stand-in for this page's real puzzle. Press "3" anywhere (while
+  // not typing in a real field) to mark this stage solved. Replace
+  // the condition inside onKeyDown with the real puzzle check once
+  // it's designed — the markStage("partnerships") call is the
+  // permanent part, everything else here is scaffolding.
+  useEffect(() => {
+    const onKeyDown = (e) => {
+      if (isTypingTarget(e.target)) return;
+      if (e.key === "3") markStage("partnerships");
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
+  // ── END TEMP / PLACEHOLDER ─────────────────────────────────────
+
+
   const [selectedTier, setSelectedTier] = useState("tier-enhanced");
   const [expandedMobileTiers, setExpandedMobileTiers] = useState({});
   const [selectedSponsor, setSelectedSponsor] = useState(0);

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo, memo } from "react";
 import "./Committee.css";
 import Nav from "./Nav";
-
+import { markStage, isTypingTarget } from "./clearance";
 // Asset imports
 import Sana1 from "../Assets/Sana1.jpeg";
 import Pau1 from "../Assets/Pau1.jpeg";
@@ -175,6 +175,23 @@ const FormattedIntel = ({ text }) => {
 };
 
 export default function Committee() {
+  // ── TEMP / PLACEHOLDER ─────────────────────────────────────────
+  // Stand-in for this page's real puzzle. Press "1" anywhere (while
+  // not typing in a real field) to mark this stage solved. Replace
+  // the condition inside onKeyDown with the real puzzle check once
+  // it's designed — the markStage("committee") call is the permanent
+  // part, everything else here is scaffolding.
+  useEffect(() => {
+    const onKeyDown = (e) => {
+      if (isTypingTarget(e.target)) return;
+      if (e.key === "1") markStage("committee");
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
+  // ── END TEMP / PLACEHOLDER ─────────────────────────────────────
+
+
   const [members, setMembers] = useState(INITIAL_MEMBERS);
   const [activeId, setActiveId] = useState(null);
   const [activePhotoIndex, setActivePhotoIndex] = useState(0);

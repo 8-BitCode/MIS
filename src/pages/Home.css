@@ -925,3 +925,398 @@ body:has(.home-page)::-webkit-scrollbar {
 @media (prefers-reduced-motion: reduce) {
   .hero-video, .hero-frame, .section-frame, .hud-crosshair, .ph::after { transition: none !important; animation: none !important; opacity: 1 !important; transform: none !important; }
 }
+
+/* ══ CLEARANCE DIAMONDS ═══════════════════════════════════════════
+   Deliberately tiny and low-contrast — this should read as part of
+   the terminal's own chrome, not as a UI element inviting a click. */
+.clearance-row {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.55rem;
+  line-height: 1;
+  opacity: 0.6;
+  user-select: none;
+}
+
+.clearance-diamond {
+  color: var(--line);
+  transition: color 0.6s ease, text-shadow 0.6s ease;
+}
+
+.clearance-diamond.is-filled {
+  text-shadow: 0 0 4px currentColor;
+}
+
+.clearance-lock {
+  margin-left: 0.15rem;
+  color: var(--line);
+  transition: color 0.6s ease, text-shadow 0.6s ease;
+}
+
+.clearance-lock.is-active {
+  color: var(--accent-committee, var(--accent, #3ddc84));
+  text-shadow: 0 0 5px currentColor;
+  animation: clearance-blink 2.4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .clearance-lock.is-active { animation: none !important; }
+}
+
+/* ── Container with slow cinematic fade-in ──────────────────────── */
+.clearance-reveal {
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  overflow: hidden;
+  animation: auth-fade-in 2.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes auth-fade-in {
+  0% { opacity: 0; transform: scale(1.03); filter: blur(4px); }
+  100% { opacity: 1; transform: scale(1); filter: blur(0); }
+}
+
+.clearance-reveal.auth-theme {
+  --auth-red: #cc1414;
+  --auth-red-dim: #a31010;
+  --auth-red-dark: #300707;
+  --auth-red-darker: #240404;
+  --auth-black: #0c0202;
+  --auth-white: #f3ece7;
+
+  background: var(--auth-red-darker);
+  font-family: "IBM Plex Mono", monospace;
+}
+
+/* ── Main panel (full page) ─────────────────────────────────────── */
+.reveal-panel {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  overflow-y: auto;
+  background: var(--auth-red);
+  color: var(--auth-black);
+  padding: clamp(1.25rem, 3vw, 2.75rem);
+  box-shadow: 0 0 40px rgba(12, 2, 2, 0.8);
+}
+
+.reveal-mark {
+  position: absolute;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--auth-black);
+  line-height: 1;
+  pointer-events: none;
+}
+
+.reveal-mark--plus-a { top: 1.4rem; right: 9.5rem; }
+.reveal-mark--plus-b { bottom: 1.6rem; right: 1.8rem; }
+
+.reveal-mark--bracket {
+  top: 1rem;
+  right: 1.6rem;
+  width: 2.2rem;
+  height: 2.2rem;
+  border-top: 2px solid var(--auth-black);
+  border-right: 2px solid var(--auth-black);
+}
+
+/* ── Topbar: brand + tagline ────────────────────────────────────── */
+.reveal-topbar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: clamp(1rem, 3vw, 1.75rem);
+}
+
+.reveal-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.reveal-brand-mark {
+  position: relative;
+  width: 2.4rem;
+  height: 1.5rem;
+  flex-shrink: 0;
+}
+.reveal-brand-mark span {
+  position: absolute;
+  inset: 0;
+  border: 2px solid var(--auth-black);
+  border-radius: 50%;
+}
+.reveal-brand-mark span:last-child {
+  inset: 0 0.55rem;
+  border-radius: 50%;
+  border-width: 1.5px;
+}
+
+.reveal-brand-text {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+.reveal-brand-text strong {
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.reveal-brand-text em {
+  font-style: normal;
+  font-size: 0.52rem;
+  line-height: 1.25;
+  letter-spacing: 0.03em;
+  font-weight: 600;
+}
+
+.reveal-tagline {
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  padding-top: 0.3rem;
+}
+
+/* ── Headline ────────────────────────────────────────────────────── */
+.reveal-headline {
+  margin: 0 0 clamp(1rem, 3vw, 1.75rem);
+  font-size: clamp(1.7rem, 5.4vw, 3.4rem);
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  line-height: 1.05;
+}
+
+.reveal-headline-hl {
+  display: inline-block;
+  background: var(--auth-white);
+  color: var(--auth-black);
+  padding: 0.05em 0.28em;
+  margin-left: 0.15em;
+}
+
+/* ── Manifesto filepath box ─────────────────────────────────────── */
+.reveal-filebox {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: var(--auth-black);
+  color: var(--auth-white);
+  border: 2px solid var(--auth-white);
+  padding: 0.55rem 0.9rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  margin-bottom: clamp(1.5rem, 4vw, 2.5rem);
+  max-width: 100%;
+}
+.reveal-filebox-icon {
+  color: var(--auth-red);
+  font-size: 0.9rem;
+  flex-shrink: 0;
+}
+
+/* ── Two-column body: globe + copy ──────────────────────────────── */
+.reveal-body {
+  display: grid;
+  grid-template-columns: minmax(200px, 36%) 1fr;
+  align-items: end;
+  gap: clamp(1rem, 3vw, 2.5rem);
+}
+
+.reveal-globe-wrap {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  margin-left: clamp(-2.5rem, -4vw, -1rem);
+}
+
+.reveal-globe {
+  width: 100%;
+  max-width: 22rem;
+  height: auto;
+  overflow: visible;
+}
+
+.globe-ring-outer {
+  fill: none;
+  stroke: rgba(12, 2, 2, 0.18);
+  stroke-width: 1;
+}
+.globe-silhouette {
+  fill: none;
+  stroke: var(--auth-black);
+  stroke-width: 1.5;
+  opacity: 0.5;
+}
+.globe-line {
+  stroke: var(--auth-black);
+  stroke-width: 1.1px;
+}
+.globe-line.is-equator {
+  stroke-width: 1.6px;
+}
+.globe-core {
+  fill: var(--auth-black);
+}
+
+.reveal-copy {
+  min-width: 0;
+}
+
+.reveal-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0 0 0.6rem;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.auth-theme .rec-dot {
+  background: var(--auth-black);
+  box-shadow: none;
+}
+
+.reveal-lead {
+  margin: 0 0 0.7rem;
+  font-size: clamp(0.9rem, 2vw, 1.15rem);
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+
+.reveal-divider {
+  width: 3.5rem;
+  height: 2px;
+  background: var(--auth-black);
+  margin-bottom: 0.9rem;
+}
+
+.reveal-lorem {
+  margin: 0 0 0.5rem;
+  font-size: 0.78rem;
+  line-height: 1.65;
+  max-width: 34rem;
+  opacity: 0.88;
+}
+
+.reveal-lorem-note {
+  margin: 0 0 1.5rem;
+  font-size: 0.62rem;
+  letter-spacing: 0.04em;
+  font-style: italic;
+  opacity: 0.65;
+}
+
+/* ── Cipher gate — the ABCD sequence entered inside the reveal ──── */
+.cipher-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  max-width: 26rem;
+  margin: 0 0 0.75rem;
+}
+
+.cipher-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.cipher-letter {
+  width: 1.5rem;
+  flex-shrink: 0;
+  font-weight: 700;
+  font-size: 0.78rem;
+}
+
+.cipher-row input {
+  flex: 1;
+  background: var(--auth-black);
+  border: 2px solid var(--auth-black);
+  color: var(--auth-white);
+  font-family: inherit;
+  font-size: 0.8rem;
+  padding: 0.5rem 0.6rem;
+  outline: none;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.cipher-row input:focus {
+  border-color: var(--auth-white);
+}
+
+.cipher-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 0.4rem;
+}
+
+.cipher-submit {
+  background: var(--auth-black);
+  color: var(--auth-white);
+}
+
+.cipher-submit:hover {
+  background: var(--auth-white);
+  color: var(--auth-black);
+}
+
+.cipher-error {
+  display: inline-block;
+  margin: 0.7rem 0 0;
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--auth-black);
+  background: var(--auth-white);
+  padding: 0.3rem 0.55rem;
+}
+
+.clearance-reveal-close {
+  background: none;
+  border: 2px solid var(--auth-black);
+  color: var(--auth-black);
+  font-family: inherit;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  padding: 0.6rem 1.3rem;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.clearance-reveal-close:hover {
+  background: var(--auth-black);
+  color: var(--auth-white);
+}
+
+@media (max-width: 52rem) {
+  .reveal-body {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    text-align: center;
+  }
+  .reveal-globe-wrap {
+    margin-left: 0;
+  }
+  .reveal-divider {
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .reveal-lorem {
+    max-width: none;
+  }
+  .reveal-mark--plus-a { right: 4.5rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rec-dot { animation: none !important; }
+}

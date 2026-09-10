@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Nav from "./Nav";
-import DecryptText from "./DecryptText";
+import { markStage, isTypingTarget } from "./clearance";import DecryptText from "./DecryptText";
 import { useEvidenceSFX } from "./useEvidenceSFX";
 import "./Contact.css";
 
@@ -119,7 +119,7 @@ const CHANNELS = [
     display: "linkedin.com/company/manchester-intelligence-society",
     href: "https://www.linkedin.com/company/manchester-intelligence-society/",
     external: true,
-    angleDeg: 162,
+    angleDeg: 150,
     radius: 95,
     height: 40,
   },
@@ -133,7 +133,7 @@ const CHANNELS = [
     display: "instagram.com/uom_mis",
     href: "https://www.instagram.com/uom_mis/",
     external: true,
-    angleDeg: 234,
+    angleDeg: 210,
     radius: 95,
     height: 40,
   },
@@ -147,7 +147,7 @@ const CHANNELS = [
     display: "discord.gg/acnwqfk3X2",
     href: "https://discord.gg/acnwqfk3X2",
     external: true,
-    angleDeg: 306,
+    angleDeg: 270,
     radius: 95,
     height: 40,
   },
@@ -161,15 +161,31 @@ const CHANNELS = [
     display: "linktr.ee/manchester.intelligence",
     href: "https://linktr.ee/manchester.intelligence",
     external: true,
-    angleDeg: 18,
+    angleDeg: 330,
     radius: 95,
     height: 40,
+  },
+  {
+    id: "join",
+    code: "N-06",
+    glyph: "MS",
+    label: "JOIN M.I.S.",
+    tag: "MEMBERSHIP — OPEN NOW",
+    desc: "Not on the books yet? Society membership runs through the SU shop — sign up to get access to every event on the calendar.",
+    display: "manchesterstudentsunion.com/shop",
+    href: "https://manchesterstudentsunion.com/shop?activity_id=1132",
+    external: true,
+    featured: true,
+    flagLabel: "JOIN NOW",
+    angleDeg: 30,
+    radius: 95,
+    height: 46,
   },
 ];
 
 const CALENDLY = {
   id: "calendly",
-  code: "N-06",
+  code: "N-07",
   glyph: "??",
   label: "BOOK A SLOT",
   tag: "PENDING SETUP",
@@ -224,6 +240,23 @@ function useMatchMedia(query) {
 }
 
 export default function Contact() {
+  // ── TEMP / PLACEHOLDER ─────────────────────────────────────────
+  // Stand-in for this page's real puzzle. Press "4" anywhere (while
+  // not typing in a real field) to mark this stage solved. Replace
+  // the condition inside onKeyDown with the real puzzle check once
+  // it's designed — the markStage("contact") call is the permanent
+  // part, everything else here is scaffolding.
+  useEffect(() => {
+    const onKeyDown = (e) => {
+      if (isTypingTarget(e.target)) return;
+      if (e.key === "4") markStage("contact");
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
+  // ── END TEMP / PLACEHOLDER ─────────────────────────────────────
+
+
   const [activeId, setActiveId] = useState(null);
   const [copied, setCopied] = useState(false);
   const [theta, setTheta] = useState(-0.5);
@@ -523,8 +556,8 @@ export default function Contact() {
           </div>
           <p className="relay-eyebrow"><span className="rec-dot" aria-hidden="true" />TRANSMISSION HUB · CLEARANCE: PUBLIC</p>
           <h1 className="relay-h1"><span className="prompt">&gt;</span><DecryptText text="OPEN A CHANNEL" trigger="mount" speed={30} /></h1>
-          <p className="relay-sub">Six live masts on the relay field. Companies and organisations — route enquiries through <strong>email</strong>.</p>
-          <p className="relay-status">SIGNAL STATUS: <span className="ok">5 CHANNELS LIVE</span> · <span className="pending">1 PENDING SETUP</span> · <span className="bearing">BEARING {String(bearing).padStart(3, "0")}°</span></p>
+          <p className="relay-sub">Seven live masts on the relay field. Companies and organisations — route enquiries through <strong>email</strong>. Not a member yet? Look for <strong>JOIN M.I.S.</strong></p>
+          <p className="relay-status">SIGNAL STATUS: <span className="ok">6 CHANNELS LIVE</span> · <span className="pending">1 PENDING SETUP</span> · <span className="bearing">BEARING {String(bearing).padStart(3, "0")}°</span></p>
         </header>
 
         <section className="relay-main" style={viewMode === "list" ? { gridTemplateColumns: "1fr" } : undefined}>
@@ -559,14 +592,14 @@ export default function Contact() {
                             key={`link-${n.id}`}
                             id={`link-${n.id}`}
                             d={`M ${hubGeom.top.x.toFixed(1)} ${hubGeom.top.y.toFixed(1)} Q ${n.mid.x.toFixed(1)} ${n.mid.y.toFixed(1)} ${n.top.x.toFixed(1)} ${n.top.y.toFixed(1)}`}
-                            className={`signal-link ${isDormant ? "is-dormant" : ""} ${n.priority ? "is-priority" : ""} ${isActiveRoute ? "is-active-route" : ""}`}
+                            className={`signal-link ${isDormant ? "is-dormant" : ""} ${n.priority ? "is-priority" : ""} ${n.featured ? "is-featured" : ""} ${isActiveRoute ? "is-active-route" : ""}`}
                           />
                         );
                       })}
                       
                       {!transmittingNode && allNodes.filter((n) => !n.dormant).map((n) => (
-                        <circle key={`packet-${n.id}`} r="2.2" className={`signal-packet ${n.priority ? "is-priority" : ""}`}>
-                          <animateMotion dur={n.priority ? "2s" : "2.8s"} repeatCount="indefinite">
+                        <circle key={`packet-${n.id}`} r="2.2" className={`signal-packet ${n.priority ? "is-priority" : ""} ${n.featured ? "is-featured" : ""}`}>
+                          <animateMotion dur={n.priority || n.featured ? "2s" : "2.8s"} repeatCount="indefinite">
                             <mpath href={`#link-${n.id}`} xlinkHref={`#link-${n.id}`} />
                           </animateMotion>
                         </circle>
@@ -698,7 +731,7 @@ export default function Contact() {
                               y1={n.base.y}
                               x2={n.top.x}
                               y2={n.top.y}
-                              className={`mast-line ${n.dormant ? "is-dormant" : ""} ${n.priority ? "is-priority" : ""} ${isExtending ? "is-extending" : ""}`}
+                              className={`mast-line ${n.dormant ? "is-dormant" : ""} ${n.priority ? "is-priority" : ""} ${n.featured ? "is-featured" : ""} ${isExtending ? "is-extending" : ""}`}
                             />
                             <ellipse cx={n.base.x} cy={n.base.y} rx="7" ry="3.2" className={`mast-foot ${n.dormant ? "is-dormant" : ""}`} />
                           </g>
@@ -852,7 +885,7 @@ export default function Contact() {
                         <li key={c.id} className={`node-wrapper ${c.dormant ? "node-wrapper--dormant" : ""}`} style={{ ...toPct(c.top), zIndex: 20 + idx }}>
                           <button
                             type="button"
-                            className={`node-chip ascii-box ${c.priority ? "is-priority" : ""} ${c.dormant ? "node-chip--dormant" : ""} ${isActive ? "is-active" : ""} ${isTransmittingThis ? "is-routing" : ""}`}
+                            className={`node-chip ascii-box ${c.priority ? "is-priority" : ""} ${c.featured ? "is-featured" : ""} ${c.dormant ? "node-chip--dormant" : ""} ${isActive ? "is-active" : ""} ${isTransmittingThis ? "is-routing" : ""}`}
                             onMouseEnter={() => handleNodeHover(c)}
                             onMouseLeave={() => handleNodeLeave(c)}
                             onFocus={() => handleNodeHover(c)}
@@ -864,6 +897,7 @@ export default function Contact() {
                             <span className="node-glyph" aria-hidden="true">{c.glyph}</span>
                             <span className="node-label">{c.label}</span>
                             {c.priority && <span className="node-flag">PRIORITY</span>}
+                            {c.featured && <span className="node-flag node-flag--featured">{c.flagLabel || "FEATURED"}</span>}
                             {c.dormant && <span className="node-flag node-flag--offline">OFFLINE</span>}
                           </button>
                         </li>
@@ -924,7 +958,7 @@ export default function Contact() {
                       <span className="readout-eyebrow">
                         {active.code} // {active.label}
                       </span>
-                      <span className={`readout-tag ${active.priority ? "is-priority" : ""} ${active.dormant ? "is-dormant" : ""}`}>
+                      <span className={`readout-tag ${active.priority ? "is-priority" : ""} ${active.featured ? "is-featured" : ""} ${active.dormant ? "is-dormant" : ""}`}>
                         {active.tag}
                       </span>
                       <p className="readout-desc">{active.desc}</p>
@@ -969,20 +1003,21 @@ export default function Contact() {
                     <li key={c.id}>
                       <button
                         type="button"
-                        className={`mobile-row ascii-box ${c.priority ? "is-priority" : ""} ${c.dormant ? "is-dormant" : ""} ${isOpen ? "is-open" : ""}`}
+                        className={`mobile-row ascii-box ${c.priority ? "is-priority" : ""} ${c.featured ? "is-featured" : ""} ${c.dormant ? "is-dormant" : ""} ${isOpen ? "is-open" : ""}`}
                         onClick={() => setOpenMobileId(isOpen ? null : c.id)}
                       >
                         <span className="mobile-row-code">{c.code}</span>
                         <span className="mobile-row-glyph" aria-hidden="true">{c.glyph}</span>
                         <span className="mobile-row-label">{c.label}</span>
                         {c.priority && <span className="node-flag">PRIORITY</span>}
+                        {c.featured && <span className="node-flag node-flag--featured">{c.flagLabel || "FEATURED"}</span>}
                         {c.dormant && <span className="node-flag node-flag--offline">OFFLINE</span>}
                         <span className="mobile-row-chevron" aria-hidden="true">{isOpen ? "[-]" : "[+]"}</span>
                       </button>
                       <div className={`mobile-drawer ${isOpen ? "is-open" : ""}`}>
                         <div className="mobile-drawer-inner">
                           <span className="readout-eyebrow">{c.code} // {c.label}</span>
-                          <span className={`readout-tag ${c.priority ? "is-priority" : ""} ${c.dormant ? "is-dormant" : ""}`}>
+                          <span className={`readout-tag ${c.priority ? "is-priority" : ""} ${c.featured ? "is-featured" : ""} ${c.dormant ? "is-dormant" : ""}`}>
                             {c.tag}
                           </span>
                           <p className="readout-desc">{c.desc}</p>

@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import "./Events.css";
 import Nav from "./Nav";
-
+import { markStage, isTypingTarget } from "./clearance";
 // ══════════════════════════════════════════════════════════════════
 // GOOGLE CALENDAR CONFIG
 // ──────────────────────────────────────────────────────────────────
@@ -197,6 +197,23 @@ function useTicker(intervalMs) {
 }
 
 export default function Events() {
+  // ── TEMP / PLACEHOLDER ─────────────────────────────────────────
+  // Stand-in for this page's real puzzle. Press "2" anywhere (while
+  // not typing in a real field) to mark this stage solved. Replace
+  // the condition inside onKeyDown with the real puzzle check once
+  // it's designed — the markStage("events") call is the permanent
+  // part, everything else here is scaffolding.
+  useEffect(() => {
+    const onKeyDown = (e) => {
+      if (isTypingTarget(e.target)) return;
+      if (e.key === "2") markStage("events");
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
+  // ── END TEMP / PLACEHOLDER ─────────────────────────────────────
+
+
   const [rawEvents, setRawEvents] = useState([]);
   const [status, setStatus] = useState(CALENDAR_NOT_CONFIGURED ? "unconfigured" : "loading");
   const [errorMsg, setErrorMsg] = useState("");

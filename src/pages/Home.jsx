@@ -1,9 +1,28 @@
-import React, { memo, useEffect, useRef, useState } from "react";
+import React, { memo, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import "./Home.css";
 import Nav from "./Nav";
 import DecryptText from "./DecryptText";
 import { useEvidenceSFX } from "./useEvidenceSFX";
+import { useClearance, markStage, isTypingTarget, isAllComplete, STAGES } from "./clearance";
+import Ending from "./Misc";
+
+// The word each sector's dossier hands the reader, keyed to clearance
+// stage id. Assembled in STAGES order they spell the Society's own
+// line back at whoever reads it: NO · ONE · LEAVES · HUNGRY.
+const CIPHER_ANSWERS = {
+  committee: "no",
+  events: "one",
+  partnerships: "leaves",
+  contact: "hungry",
+};
+
+const CIPHER_LABELS = {
+  committee: "A",
+  events: "B",
+  partnerships: "C",
+  contact: "D",
+};
 
 // Import all spy video assets
 import spyVideo1 from "../Assets/spy.mp4";
@@ -135,13 +154,6 @@ function CountUpValue({ value }) {
   return <span ref={ref}>{display}</span>;
 }
 
-// Scroll-linked progress (0 → 1) for how far a node has travelled through
-// a "reveal window" in the viewport. Used to drive the redaction peel.
-// `revealStart`/`revealEnd` are fractions of viewport height measured from
-// the top: progress hits 0 when the node's top is at `revealStart` and 1
-// once it reaches `revealEnd`. A tighter window (smaller gap between the
-// two) means less scrolling is needed to fully declassify — useful for
-// content further down the page where there's less room left to scroll.
 function useScrollProgress(ref, revealStart = 0.92, revealEnd = 0.5) {
   const [progress, setProgress] = useState(0);
   const rafRef = useRef(null);
@@ -158,10 +170,6 @@ function useScrollProgress(ref, revealStart = 0.92, revealEnd = 0.5) {
       const maxScroll = doc.scrollHeight - vh;
       const atBottom = maxScroll <= 0 || window.scrollY >= maxScroll - 2;
 
-      // Once the page itself can't scroll any further, force full reveal —
-      // otherwise content near the bottom (which never reaches the normal
-      // "end" trigger position because there's no more room to scroll)
-      // would stay stuck partially redacted forever.
       if (atBottom) {
         setProgress(1);
         return;
@@ -192,13 +200,6 @@ function useScrollProgress(ref, revealStart = 0.92, revealEnd = 0.5) {
   return progress;
 }
 
-// RedactedText — renders `text` word-by-word, each hidden under a
-// redaction bar. As the paragraph scrolls up through the viewport, the
-// bars peel off left-to-right in step with scroll position, "declassifying"
-// the copy in real time rather than on a single mount/visibility trigger.
-// `variant`: "solid" (default, flat black bar — briefing text & case
-// index) or "stripe" (diagonal hatch, matching the stat cards' own
-// declassify-tape look) so different sections don't all peel identically.
 function RedactedText({
   text,
   className = "",
@@ -261,12 +262,324 @@ function Declassify({ children, className = "", tag: Tag = "div", style }) {
   );
 }
 
+const STAGE_ACCENT = {
+  committee: "var(--accent-committee)",
+  events: "var(--accent-events)",
+  partnerships: "var(--accent-partnerships)",
+  contact: "var(--accent-contact)",
+};
+
+function ClearanceDiamonds({ stages }) {
+  const complete = STAGES.every((id) => stages.has(id));
+  return (
+    <div className="clearance-row" aria-hidden="true">
+      {STAGES.map((id) => (
+        <span
+          key={id}
+          className={`clearance-diamond ${stages.has(id) ? "is-filled" : ""}`}
+          style={stages.has(id) ? { color: STAGE_ACCENT[id] } : undefined}
+        >
+          ◆
+        </span>
+      ))}
+      <span className={`clearance-lock ${complete ? "is-active" : ""}`}>
+        {complete ? "⊙" : "⊘"}
+      </span>
+    </div>
+  );
+}
+
+function useReducedMotionPref() {
+  const [reduced, setReduced] = useState(
+    () => typeof window !== "undefined" && window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches
+  );
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.matchMedia) return undefined;
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const handler = () => setReduced(mq.matches);
+    handler();
+    if (mq.addEventListener) mq.addEventListener("change", handler);
+    else mq.addListener(handler);
+    return () => {
+      if (mq.removeEventListener) mq.removeEventListener("change", handler);
+      else mq.removeListener(handler);
+    };
+  }, []);
+  return reduced;
+}
+
+const GLOBE_ARC_STEPS = 40;
+const GLOBE_MERIDIANS = 6;
+const GLOBE_LATITUDES = [-75, -50, -25, 0, 25, 50, 75];
+
+function rotatePoint3D(x, y, z, spinRad, tiltRad) {
+  const cs = Math.cos(spinRad), sn = Math.sin(spinRad);
+  const x1 = x * cs + z * sn;
+  const z1 = -x * sn + z * cs;
+  const ct = Math.cos(tiltRad), st = Math.sin(tiltRad);
+  const y2 = y * ct - z1 * st;
+  const z2 = y * st + z1 * ct;
+  return { x: x1, y: y2, z: z2 };
+}
+
+function buildGlobeSegments(spinDeg, tiltDeg) {
+  const spin = (spinDeg * Math.PI) / 180;
+  const tilt = (tiltDeg * Math.PI) / 180;
+  const segments = [];
+
+  const pushLine = (a, b, emphasize) => {
+    const avgZ = (a.z + b.z) / 2;
+    const depth01 = Math.min(1, Math.max(0, (avgZ + 1) / 2));
+    let opacity = 0.08 + 0.72 * Math.pow(depth01, 1.4);
+    if (emphasize) opacity = Math.min(1, opacity + 0.18);
+    segments.push({
+      x1: a.x, y1: -a.y, x2: b.x, y2: -b.y, opacity, emphasize,
+    });
+  };
+
+  for (let m = 0; m < GLOBE_MERIDIANS; m++) {
+    const theta0 = (m * Math.PI) / GLOBE_MERIDIANS;
+    let prev = null;
+    for (let i = 0; i <= GLOBE_ARC_STEPS; i++) {
+      const t = (i / GLOBE_ARC_STEPS) * Math.PI * 2;
+      const x = Math.sin(t) * Math.cos(theta0);
+      const y = Math.cos(t);
+      const z = Math.sin(t) * Math.sin(theta0);
+      const p = rotatePoint3D(x, y, z, spin, tilt);
+      if (prev) pushLine(prev, p, false);
+      prev = p;
+    }
+  }
+
+  GLOBE_LATITUDES.forEach((latDeg) => {
+    const lat = (latDeg * Math.PI) / 180;
+    const y0 = Math.sin(lat);
+    const r0 = Math.cos(lat);
+    let prev = null;
+    for (let i = 0; i <= GLOBE_ARC_STEPS; i++) {
+      const t = (i / GLOBE_ARC_STEPS) * Math.PI * 2;
+      const x = r0 * Math.cos(t);
+      const y = y0;
+      const z = r0 * Math.sin(t);
+      const p = rotatePoint3D(x, y, z, spin, tilt);
+      if (prev) pushLine(prev, p, latDeg === 0);
+      prev = p;
+    }
+  });
+
+  return segments;
+}
+
+function WireframeGlobe({ size = 360 }) {
+  const reducedMotion = useReducedMotionPref();
+  const [spin, setSpin] = useState(24);
+  const rafRef = useRef(null);
+
+  useEffect(() => {
+    if (reducedMotion) return undefined;
+    let last = performance.now();
+    let acc = 0;
+    const tick = (t) => {
+      const dt = t - last;
+      last = t;
+      acc += dt;
+      if (acc >= 45) {
+        setSpin((s) => s + acc * 0.01);
+        acc = 0;
+      }
+      rafRef.current = requestAnimationFrame(tick);
+    };
+    rafRef.current = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(rafRef.current);
+  }, [reducedMotion]);
+
+  const radius = size * 0.42;
+  const cx = size / 2;
+  const cy = size / 2;
+  const segments = useMemo(() => buildGlobeSegments(spin, -16), [spin]);
+
+  return (
+    <svg
+      className="reveal-globe"
+      viewBox={`0 0 ${size} ${size}`}
+      role="img"
+      aria-label="Rotating wireframe globe"
+    >
+      <circle cx={cx} cy={cy} r={radius * 1.34} className="globe-ring-outer" />
+      <circle cx={cx} cy={cy} r={radius} className="globe-silhouette" />
+      <g transform={`translate(${cx} ${cy}) scale(${radius})`}>
+        {segments.map((s, i) => (
+          <line
+            key={i}
+            x1={s.x1}
+            y1={s.y1}
+            x2={s.x2}
+            y2={s.y2}
+            vectorEffect="non-scaling-stroke"
+            style={{ opacity: s.opacity }}
+            className={`globe-line ${s.emphasize ? "is-equator" : ""}`}
+          />
+        ))}
+      </g>
+      <circle cx={cx} cy={cy} r={3} className="globe-core" />
+    </svg>
+  );
+}
+
+function ClearanceReveal({ onDismiss }) {
+  const [inputs, setInputs] = useState({
+    committee: "",
+    events: "",
+    partnerships: "",
+    contact: "",
+  });
+  const [error, setError] = useState(false);
+  const [unsealed, setUnsealed] = useState(false);
+
+  useEffect(() => {
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prevOverflow;
+    };
+  }, []);
+
+  const handleChange = (id) => (e) => {
+    setError(false);
+    setInputs((prev) => ({ ...prev, [id]: e.target.value }));
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const correct = STAGES.every(
+      (id) => inputs[id].trim().toLowerCase() === CIPHER_ANSWERS[id]
+    );
+    if (correct) {
+      setUnsealed(true);
+    } else {
+      setError(true);
+    }
+  };
+
+  // Once the cipher's right, the whole reveal hands off to Ending —
+  // no auth-theme red, no ASCII marks, no globe. That tonal break is
+  // the point: everything before this was still the dashboard.
+  if (unsealed) {
+    return (
+      <div className="clearance-reveal" role="dialog" aria-label="Declassified transmission">
+        <Ending onDismiss={onDismiss} />
+      </div>
+    );
+  }
+
+  return (
+    <div className="clearance-reveal auth-theme" role="dialog" aria-label="Classified transmission">
+      <div className="reveal-panel">
+        <span className="reveal-mark reveal-mark--plus-a" aria-hidden="true">+</span>
+        <span className="reveal-mark reveal-mark--bracket" aria-hidden="true" />
+        <span className="reveal-mark reveal-mark--plus-b" aria-hidden="true">+</span>
+
+        <div className="reveal-topbar">
+          <div className="reveal-brand">
+            <span className="reveal-brand-mark" aria-hidden="true">
+              <span />
+              <span />
+            </span>
+            <span className="reveal-brand-text">
+              <strong>M.I.S.</strong>
+              <em>MANCHESTER<br />INTELLIGENCE<br />SOCIETY</em>
+            </span>
+          </div>
+          <span className="reveal-tagline">OBSERVE / QUESTION / RESIST</span>
+        </div>
+
+        <h1 className="reveal-headline">
+          ALL CLEARANCE <span className="reveal-headline-hl">GRANTED &gt;&gt;</span>
+        </h1>
+
+        <div className="reveal-filebox">
+          <span className="reveal-filebox-icon" aria-hidden="true">&#9678;</span>
+          <span>~/classified/manifesto.txt</span>
+        </div>
+
+        <div className="reveal-body">
+          <div className="reveal-globe-wrap">
+            <WireframeGlobe />
+          </div>
+
+          <div className="reveal-copy">
+            <p className="reveal-eyebrow">
+              <span className="rec-dot" aria-hidden="true" />
+              TRANSMISSION 04 // FINAL STATEMENT
+            </p>
+            <p className="reveal-lead">FOUR SECTORS DECRYPTED. ONE FILE REMAINS SEALED.</p>
+            <div className="reveal-divider" />
+            <p className="reveal-lorem">
+              Replace A, B, C and D with what each sector's dossier gave you.
+              Get the sequence right and the manifesto declassifies.
+            </p>
+
+            <form className="cipher-form" onSubmit={handleSubmit}>
+              {STAGES.map((id) => (
+                <label key={id} className="cipher-row">
+                  <span className="cipher-letter">{CIPHER_LABELS[id]} =</span>
+                  <input
+                    type="text"
+                    autoComplete="off"
+                    spellCheck="false"
+                    value={inputs[id]}
+                    onChange={handleChange(id)}
+                  />
+                </label>
+              ))}
+
+              <div className="cipher-actions">
+                <button type="submit" className="clearance-reveal-close cipher-submit">
+                  &gt; DECLASSIFY
+                </button>
+                <button
+                  type="button"
+                  className="clearance-reveal-close"
+                  onClick={onDismiss}
+                >
+                  &gt; RETURN TO SURFACE
+                </button>
+              </div>
+            </form>
+
+            {error && (
+              <p className="cipher-error">
+                INCORRECT SEQUENCE. FILE REMAINS SEALED.
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function Home() {
+
   const [videoReady, setVideoReady] = useState(false);
   const [activeVideoIndex, setActiveVideoIndex] = useState(0);
   const videoRefs = useRef([]);
 
   const { playPinThud, playDossierOpen } = useEvidenceSFX();
+
+  const stages = useClearance();
+  const [revealDismissed, setRevealDismissed] = useState(false);
+
+  useEffect(() => {
+    const KEY_TO_STAGE = { a: "committee", b: "events", c: "partnerships", d: "contact" };
+    const onKeyDown = (e) => {
+      if (isTypingTarget(e.target)) return;
+      const stageId = KEY_TO_STAGE[e.key.toLowerCase()];
+      if (stageId) markStage(stageId);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
 
   const [briefingRef, briefingVisible] = useScrollReveal();
   const [statsRef, statsVisible] = useScrollReveal();
@@ -301,12 +614,10 @@ export default function Home() {
     };
   }, []);
 
-  // Handle the seamless transition to the next video
   const handleVideoEnd = () => {
     const nextIdx = (activeVideoIndex + 1) % VIDEOS.length;
     setActiveVideoIndex(nextIdx);
     
-    // Play the next video programmatically from the start
     if (videoRefs.current[nextIdx]) {
       videoRefs.current[nextIdx].currentTime = 0;
       videoRefs.current[nextIdx].play().catch(() => {});
@@ -338,7 +649,6 @@ export default function Home() {
           className="hero-media" 
           style={{ transform: `translateY(${scrollY * 0.35}px)` }}
         >
-          {/* Map through all videos and stack them */}
           {VIDEOS.map((src, idx) => (
             <video
               key={src}
@@ -558,7 +868,12 @@ export default function Home() {
             </React.Fragment>
           ))}
         </span>
+        <ClearanceDiamonds stages={stages} />
       </footer>
+
+      {isAllComplete(stages) && !revealDismissed && (
+        <ClearanceReveal onDismiss={() => setRevealDismissed(true)} />
+      )}
     </div>
   );
 }
