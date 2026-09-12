@@ -14,13 +14,6 @@ const CIPHER_ANSWERS = {
   contact: "hungry",
 };
 
-const CIPHER_LABELS = {
-  committee: "A",
-  events: "B",
-  partnerships: "C",
-  contact: "D",
-};
-
 import spyVideo1 from "../Assets/spy.mp4";
 import spyVideo2 from "../Assets/spy2.mp4";
 import spyVideo3 from "../Assets/spy3.mp4";
@@ -296,8 +289,8 @@ function ClearanceDiamonds({ stages, onUnlock }) {
 //   0 1 2
 //   3 4 5
 //   6 7 8
-// The correct pattern is a five-point path through the corners:
-// bottom-right → bottom-left → top-right → top-left → centre.
+// The correct pattern is a four-point path through the corners:
+// bottom-right → bottom-left → top-right → top-left.
 const PATTERN_GRID_SIZE = 3;
 const PATTERN_ANSWER = [8, 6, 2, 0];
 
@@ -671,56 +664,38 @@ function ClearanceReveal({ onDismiss }) {
           <span className="reveal-tagline">OBSERVE / QUESTION / RESIST</span>
         </div>
 
-        <h1 className="reveal-headline">
-          ALL CLEARANCE <span className="reveal-headline-hl">GRANTED &gt;&gt;</span>
-        </h1>
-
-        <div className="reveal-filebox">
-          <span className="reveal-filebox-icon" aria-hidden="true">&#9678;</span>
-          <span>~/classified/manifesto.txt</span>
-        </div>
-
-        <div className="reveal-body">
+        <div className="reveal-body reveal-body--kitchen">
           <div className="reveal-globe-wrap">
             <WireframeGlobe />
           </div>
 
-          <div className="reveal-copy">
-            <p className="reveal-eyebrow">
-              <span className="rec-dot" aria-hidden="true" />
-              TRANSMISSION 04 // FINAL STATEMENT
-            </p>
-            <p className="reveal-lead">FOUR SECTORS DECRYPTED. ONE FILE REMAINS SEALED.</p>
-            <div className="reveal-divider" />
-            <p className="reveal-lorem">
-              Replace A, B, C and D with what each sector's dossier gave you.
-              Get the sequence right and the manifesto declassifies.
-            </p>
+          <div className="reveal-copy reveal-copy--kitchen">
+            <h1 className="reveal-kitchen-title">The Kitchen</h1>
 
-            <form className="cipher-form" onSubmit={handleSubmit}>
+            <form className="cipher-form cipher-form--kitchen" onSubmit={handleSubmit}>
               {STAGES.map((id) => (
-                <label key={id} className="cipher-row">
-                  <span className="cipher-letter">{CIPHER_LABELS[id]} =</span>
+                <label key={id} className="cipher-row cipher-row--kitchen">
                   <input
                     type="text"
                     autoComplete="off"
                     spellCheck="false"
+                    aria-label={id}
                     value={inputs[id]}
                     onChange={handleChange(id)}
                   />
                 </label>
               ))}
 
-              <div className="cipher-actions">
+              <div className="cipher-actions cipher-actions--kitchen">
                 <button type="submit" className="clearance-reveal-close cipher-submit">
-                  &gt; DECLASSIFY
+                  [ ENTER ]
                 </button>
                 <button
                   type="button"
                   className="clearance-reveal-close"
                   onClick={onDismiss}
                 >
-                  &gt; RETURN TO SURFACE
+                  [ CONTINUE SERVING ]
                 </button>
               </div>
             </form>
