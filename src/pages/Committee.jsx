@@ -110,9 +110,7 @@ const CLAMP_TOP_MIN = 8;
 const CLAMP_TOP_MAX = 92;
 const JOLT_TRIGGER_MARGIN = 4;
 
-// ── SECRET STORY DIALOG ──────────────────────────────────────────
-// Paste your full story here. Each string in the array will fade in 
-// as a new paragraph every time the user clicks.
+//ignore scrapped code
 const COMMITTEE_CHAPTER_PARAGRAPHS = [
   "\"No,\" he said, waving off the sommelier's fifth suggestion before they had even finished. \"What would they think if they saw me with a bottle so garish? I need something more appropriate, something more audience-friendly.\"",
   "With a kind smile and a clenched jaw, the sommelier replied simply, \"I will check in the back.\"",

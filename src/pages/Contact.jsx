@@ -211,16 +211,8 @@ function randomHex(len) {
   return out;
 }
 
-// ── Puzzle: the bearing sequence that unlocks this page's chapter ──
-// Each value is read off the live BEARING readout in the header. The
-// player drags the field until the three-digit bearing matches one of
-// these numbers in order. Nothing in the UI hints at this beyond the
-// "ALPHA COMPANY" watermark in the corner.
 const TARGET_BEARINGS = [3, 15, 13, 16, 1, 14, 25];
-
-// ── Plain-string chapter: "HUNGRY" is the cipher word this page hands
-// back to the Home finale. Kept as plain strings to avoid the fragility
-// of shift-encoded arrays across edits.
+//ignore scrapped code
 const CONTACT_CHAPTER_PARAGRAPHS = [
   "\"Hungry\" wasn't a word ever used at this table. \"Hunger\" wasn't a concept that was apt for what the waiter was staring at. People feel hunger. Animals feel hunger. What was facing the waiter was something that could only feel a deficit.",
   "\"What will you be hav...\"",

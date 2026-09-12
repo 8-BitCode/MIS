@@ -1,10 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import "./Misc.css";
 
-// ── ENDING SEQUENCE ─────────────────────────────────────────────
-// Each entry is one beat. Redaction-bar lines (████) are their own
-// entries so they fade in and out as their own moment between the
-// surrounding dialogue, matching the rhythm of the written scene.
 const LINES = [
   "The kitchen didn't look like a kitchen. No ranges, no ticket rail, no steel counters slicked with the evening's service. Just dark, and a sound like breathing that wasn't quite breathing.",
   "\"H- hello?\" It came out smaller than they meant it to.",
@@ -113,7 +109,9 @@ export default function Misc({ onDismiss }) {
 
       {finished && onDismiss && (
         <button
+          type="button"
           className={`ending-return ${showReturn ? "is-visible" : ""}`}
+          onPointerDown={(e) => e.stopPropagation()}
           onClick={(e) => {
             e.stopPropagation();
             onDismiss();

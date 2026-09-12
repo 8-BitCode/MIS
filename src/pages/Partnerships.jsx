@@ -536,9 +536,7 @@ const SPONSOR_TIERS = [
   }
 ];
 
-// ── CHAPTER PARAGRAPHS ───────────────────────────────────────────
-// Plain strings for readability. Each is revealed one at a time on
-// click, exactly like Committee and Events.
+//ignore scrapped code
 const PARTNERSHIPS_CHAPTER_PARAGRAPHS = [
   "\"Leaves, mostly, were what came through the hatch: dry, stemmy plant leaves. In all their years working there, they had never seen a dish quite like this.\"",
   "\"Is this even edible?\" the waiter thought to themselves briefly.",
