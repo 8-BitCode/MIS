@@ -24,7 +24,7 @@ const CALENDAR_NOT_CONFIGURED =
 const WEEKDAYS = ["S", "M", "T", "W", "T", "F", "S"];
 
 
-const TARGET_DAY_KEY = "2025-03-22";
+const TARGET_DAY_KEY = "2010-03-22";
 
 //scrapped code ignore
 const EVENTS_CHAPTER_PARAGRAPHS = [
