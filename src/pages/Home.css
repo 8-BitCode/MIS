@@ -1320,3 +1320,95 @@ body:has(.home-page)::-webkit-scrollbar {
 @media (prefers-reduced-motion: reduce) {
   .rec-dot { animation: none !important; }
 }
+
+/* ══ PATTERN LOCK — 3×3 clearance grid ═══════════════════════════
+   A small square grid of nine dots. Drag a continuous path through
+   them; a lit trail connects each dot you touch. Correct pattern
+   unlocks the reveal, wrong pattern shakes and clears. */
+.pattern-lock {
+  display: inline-block;
+  user-select: none;
+  touch-action: none;
+}
+
+.pattern-lock.is-rejected {
+  animation: pattern-shake 0.42s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+}
+
+@keyframes pattern-shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-4px); }
+  40% { transform: translateX(4px); }
+  60% { transform: translateX(-3px); }
+  80% { transform: translateX(3px); }
+}
+
+.pattern-lock.is-solved .pattern-grid {
+  border-color: var(--accent);
+  box-shadow: 0 0 12px rgba(61, 220, 132, 0.55);
+}
+
+.pattern-lock.is-solved .pattern-trail {
+  color: var(--accent);
+}
+
+.pattern-grid {
+  position: relative;
+  width: 3.6rem;
+  height: 3.6rem;
+  border: 1px dashed var(--line);
+  background: rgba(61, 220, 132, 0.02);
+  cursor: crosshair;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.pattern-lock.is-rejected .pattern-grid {
+  border-color: var(--flag);
+}
+
+/* The SVG overlay draws the connected trail. Sits below the dots so
+   the dots themselves read as "sockets" the trail runs through. */
+.pattern-trail {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  color: var(--accent);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.pattern-lock.is-rejected .pattern-trail {
+  color: var(--flag);
+}
+
+.pattern-dot {
+  position: absolute;
+  width: 0.5rem;
+  height: 0.5rem;
+  margin: -0.25rem 0 0 -0.25rem;
+  border-radius: 50%;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  pointer-events: none;
+  z-index: 2;
+  transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.pattern-dot.is-active {
+  background: var(--accent);
+  border-color: var(--accent);
+  box-shadow: 0 0 8px rgba(61, 220, 132, 0.7);
+  transform: scale(1.15);
+}
+
+.pattern-lock.is-rejected .pattern-dot.is-active {
+  background: var(--flag);
+  border-color: var(--flag);
+  box-shadow: 0 0 8px rgba(255, 90, 78, 0.7);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pattern-lock.is-rejected { animation: none !important; }
+  .pattern-dot { transition: none !important; }
+}

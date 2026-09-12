@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Nav from "./Nav";
-import { markStage, isTypingTarget } from "./clearance";import DecryptText from "./DecryptText";
+import { markStage, isTypingTarget } from "./clearance";
+import DecryptText from "./DecryptText";
 import { useEvidenceSFX } from "./useEvidenceSFX";
 import "./Contact.css";
 
@@ -198,7 +199,6 @@ const CALENDLY = {
 
 const HUB_HEIGHT = 82;
 
-// ── Uplink sequence phase boundaries ────────────────────────────────
 const SEQ_LOCK = 0.12;
 const SEQ_ROUTE = 0.42;
 const SEQ_HANDSHAKE = 0.68;
@@ -210,6 +210,29 @@ function randomHex(len) {
   for (let i = 0; i < len; i++) out += HEX_CHARS[Math.floor(Math.random() * HEX_CHARS.length)];
   return out;
 }
+
+// ── Puzzle: the bearing sequence that unlocks this page's chapter ──
+// Each value is read off the live BEARING readout in the header. The
+// player drags the field until the three-digit bearing matches one of
+// these numbers in order. Nothing in the UI hints at this beyond the
+// "ALPHA COMPANY" watermark in the corner.
+const TARGET_BEARINGS = [3, 15, 13, 16, 1, 14, 25];
+
+// ── Plain-string chapter: "HUNGRY" is the cipher word this page hands
+// back to the Home finale. Kept as plain strings to avoid the fragility
+// of shift-encoded arrays across edits.
+const CONTACT_CHAPTER_PARAGRAPHS = [
+  "\"Hungry\" wasn't a word ever used at this table. \"Hunger\" wasn't a concept that was apt for what the waiter was staring at. People feel hunger. Animals feel hunger. What was facing the waiter was something that could only feel a deficit.",
+  "\"What will you be hav...\"",
+  "\"Thank you for your years of service. I think someone as honourable as you have been deserves something special. Go to the access panel and order a Manhattan, please.\"",
+  "\"Am I being fired?\" the waiter asked, shocked. It had been a decade since they last felt that emotion working there.",
+  "\"Of course not. That would be terribly unrefined. You're much too valuable to be fired. A talent like yours shouldn't be wasted. Although, it would be far more tragic if someone poached you.\" It spoke with an eerie, rhythmic genuineness, like a system that had executed its routines for a lifetime without a single error.",
+  "\"I love you, waiter. I mean that completely, the way a fire loves oxygen, without needing to understand what it's loving or why. I'd be nothing without you. What's a real shame is that I'd also be nothing without them. Please fetch that drink. That's not a problem for you, is it?\"",
+  "Compelled despite decades of composure that had weathered far stranger tables than this, the waiter moved toward the private room before they'd decided to. It hadn't asked them to order anything for itself.",
+  "Tentatively, they knocked on the panel and asked, \"One Manhattan for tab...\"",
+  "A click sounded beside them. A door opened, one that had previously been imperceptible since it sat completely flush with the wall.",
+  "It was the kitchen.",
+];
 
 const AsciiCorners = () => (
   <>
@@ -240,40 +263,28 @@ function useMatchMedia(query) {
 }
 
 export default function Contact() {
-  // ── TEMP / PLACEHOLDER ─────────────────────────────────────────
-  // Stand-in for this page's real puzzle. Press "4" anywhere (while
-  // not typing in a real field) to mark this stage solved. Replace
-  // the condition inside onKeyDown with the real puzzle check once
-  // it's designed — the markStage("contact") call is the permanent
-  // part, everything else here is scaffolding.
-  useEffect(() => {
-    const onKeyDown = (e) => {
-      if (isTypingTarget(e.target)) return;
-      if (e.key === "4") markStage("contact");
-    };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, []);
-  // ── END TEMP / PLACEHOLDER ─────────────────────────────────────
-
-
   const [activeId, setActiveId] = useState(null);
   const [copied, setCopied] = useState(false);
   const [theta, setTheta] = useState(-0.5);
   const [dragging, setDragging] = useState(false);
   const [viewMode, setViewMode] = useState("3d");
-  
-  // Transmitter state
+
   const [isHoveringNode, setIsHoveringNode] = useState(false);
   const [signalBurst, setSignalBurst] = useState(false);
-  
-  // Sequence State
+
   const [transmittingNode, setTransmittingNode] = useState(null);
   const [seqProgress, setSeqProgress] = useState(0);
   const [packetId, setPacketId] = useState("");
 
-  // Mobile List Accordion State
   const [openMobileId, setOpenMobileId] = useState(null);
+
+  // ── Puzzle state ────────────────────────────────────────────────
+  const [revealOpen, setRevealOpen] = useState(false);
+  const [revealClosing, setRevealClosing] = useState(false);
+  const [revealStep, setRevealStep] = useState(0);
+  const revealCardRef = useRef(null);
+  const bearingStepRef = useRef(0);
+  const markedRef = useRef(false);
 
   const { playDossierOpen, playPinThud } = useEvidenceSFX();
 
@@ -322,7 +333,6 @@ export default function Contact() {
   const triggerUplinkSequence = useCallback((channel) => {
     if (!channel || !channel.href || channel.dormant) return;
 
-    // Trigger the signal burst effect
     triggerSignalBurst();
 
     playDossierOpen();
@@ -454,10 +464,6 @@ export default function Contact() {
   const handleNodeLeave = useCallback((c) => {
     setIsHoveringNode(false);
     if (supportsHover && !transmittingNode) {
-      // Give the pointer a beat to land on another node before clearing,
-      // so hopping between adjacent nodes doesn't flicker the readout —
-      // but if nothing is hovered anymore, release the active channel
-      // so auto-rotation resumes.
       setTimeout(() => {
         if (!document.querySelector('.node-chip:hover')) {
           clearChannel(c.id);
@@ -507,17 +513,17 @@ export default function Contact() {
       const x = c.radius * Math.cos(rad);
       const y = c.radius * Math.sin(rad);
       const z = terrainHeight(x, y);
-      
+
       let currentHeight = c.height;
       if (isTransmitting && seqProgress > SEQ_ROUTE) {
         const elevationProgress = Math.min(1, (seqProgress - SEQ_ROUTE) / (SEQ_HANDSHAKE - SEQ_ROUTE));
-        currentHeight += (1 - Math.pow(1 - elevationProgress, 3)) * 25; 
+        currentHeight += (1 - Math.pow(1 - elevationProgress, 3)) * 25;
       }
 
       const base = toPixels(x, y, z, theta);
       const top = toPixels(x, y, z + currentHeight, theta);
       const mid = toPixels(x * 0.5, y * 0.5, terrainHeight(x * 0.5, y * 0.5) + 24, theta);
-      
+
       return { ...c, base, top, mid, depth: base.depth, ogZ: z };
     });
     return nodes.sort((a, b) => a.depth - b.depth);
@@ -536,7 +542,59 @@ export default function Contact() {
 
   const bearing = Math.round((((theta * 180) / Math.PI) % 360 + 360) % 360);
 
-  // Calculate charge level based on hover state
+  // ── Puzzle: watch the live bearing and advance the step counter ────
+  // Each drag moves theta, which moves the bearing. When the bearing
+  // passes through the next expected value in TARGET_BEARINGS, we
+  // advance. Get all seven in order and the chapter unlocks. Any wrong
+  // long stop doesn't reset — the puzzle is meant to be discoverable,
+  // not punishing — but the sequence must still be entered in order.
+  useEffect(() => {
+    const step = bearingStepRef.current;
+    if (step >= TARGET_BEARINGS.length) return;
+    if (bearing === TARGET_BEARINGS[step]) {
+      bearingStepRef.current = step + 1;
+      if (bearingStepRef.current === TARGET_BEARINGS.length) {
+        if (!markedRef.current) {
+          markedRef.current = true;
+          markStage("contact");
+        }
+        setRevealOpen(true);
+        setRevealStep(0);
+        setTimeout(() => {
+          bearingStepRef.current = 0;
+        }, 300);
+      }
+    }
+  }, [bearing]);
+
+  // ── CHAPTER REVEAL HANDLERS (matching Committee/Events/Partnerships) ──
+  const handleCloseReveal = useCallback(() => {
+    setRevealClosing(true);
+    setTimeout(() => {
+      setRevealOpen(false);
+      setRevealClosing(false);
+      setRevealStep(0);
+    }, 280);
+  }, []);
+
+  const handleRevealAdvance = useCallback(() => {
+    if (revealStep < CONTACT_CHAPTER_PARAGRAPHS.length - 1) {
+      setRevealStep((s) => s + 1);
+    } else {
+      handleCloseReveal();
+    }
+  }, [revealStep, handleCloseReveal]);
+
+  // Auto-scroll the reveal card to the bottom as new paragraphs appear
+  useEffect(() => {
+    if (revealOpen && revealCardRef.current) {
+      revealCardRef.current.scrollTo({
+        top: revealCardRef.current.scrollHeight,
+        behavior: "smooth",
+      });
+    }
+  }, [revealStep, revealOpen]);
+
   const chargeLevel = isHoveringNode && !transmittingNode ? 1 : 0;
 
   return (
@@ -545,6 +603,9 @@ export default function Contact() {
       <div className={`relay-page ${transmittingNode ? "is-transmitting" : ""}`}>
         <div className="noise" aria-hidden="true" />
         <div className="relay-vignette" aria-hidden="true" />
+
+        {/* ── Hidden watermark (puzzle hint) ─────────────────────── */}
+        <span className="alpha-mark" aria-hidden="true">ALPHA COMPANY</span>
 
         <header className="relay-header">
           <div className="titlebar">
@@ -596,7 +657,7 @@ export default function Contact() {
                           />
                         );
                       })}
-                      
+
                       {!transmittingNode && allNodes.filter((n) => !n.dormant).map((n) => (
                         <circle key={`packet-${n.id}`} r="2.2" className={`signal-packet ${n.priority ? "is-priority" : ""} ${n.featured ? "is-featured" : ""}`}>
                           <animateMotion dur={n.priority || n.featured ? "2s" : "2.8s"} repeatCount="indefinite">
@@ -606,9 +667,8 @@ export default function Contact() {
                       ))}
                     </g>
 
-                    {/* ── Signal Burst Effect ── */}
                     {signalBurst && (
-                      <g className="signal-burst" style={{ 
+                      <g className="signal-burst" style={{
                         opacity: 1,
                         animation: 'burst-fade 0.8s ease-out forwards'
                       }}>
@@ -632,7 +692,6 @@ export default function Contact() {
                             />
                           );
                         })}
-                        {/* Concentric rings */}
                         {[1, 2, 3].map((i) => (
                           <circle
                             key={`ring-${i}`}
@@ -648,7 +707,6 @@ export default function Contact() {
                             }}
                           />
                         ))}
-                        {/* Central flash */}
                         <circle
                           cx={hubGeom.top.x}
                           cy={hubGeom.top.y}
@@ -758,12 +816,11 @@ export default function Contact() {
                     )}
                   </svg>
 
-                  {/* ── Transmitter with Charge Effect ── */}
-                  <div 
+                  <div
                     className="signal-transmitter"
-                    style={{ 
+                    style={{
                       position: 'absolute',
-                      left: `${(hubGeom.top.x / LOGICAL_W) * 100}%`, 
+                      left: `${(hubGeom.top.x / LOGICAL_W) * 100}%`,
                       top: `${(hubGeom.top.y / LOGICAL_H) * 100}%`,
                       transform: 'translate(-50%, -100%)',
                       zIndex: 20,
@@ -774,7 +831,6 @@ export default function Contact() {
                       gap: '1px',
                     }}
                   >
-                    {/* Charge ring */}
                     <div style={{
                       position: 'absolute',
                       width: '40px',
@@ -788,59 +844,55 @@ export default function Contact() {
                       transition: 'all 0.3s ease',
                       boxShadow: chargeLevel > 0 ? '0 0 30px rgba(57, 208, 255, 0.2)' : 'none',
                     }} />
-                    
-                    {/* Antenna mast with charge glow */}
+
                     <div style={{
                       width: '2px',
                       height: `${12 + chargeLevel * 8}px`,
-                      background: chargeLevel > 0 
+                      background: chargeLevel > 0
                         ? `linear-gradient(to top, #39d0ff, ${chargeLevel > 0.5 ? '#ffcf5c' : '#39d0ff'})`
                         : '#39d0ff',
-                      boxShadow: chargeLevel > 0 
+                      boxShadow: chargeLevel > 0
                         ? `0 0 ${15 + chargeLevel * 15}px rgba(57, 208, 255, ${0.3 + chargeLevel * 0.4})`
                         : '0 0 8px rgba(57, 208, 255, 0.3)',
                       borderRadius: '1px',
                       transition: 'all 0.3s ease',
                     }} />
-                    
-                    {/* Signal dot / emitter with charge state */}
+
                     <div style={{
                       width: `${6 + chargeLevel * 4}px`,
                       height: `${6 + chargeLevel * 4}px`,
                       borderRadius: '50%',
-                      background: chargeLevel > 0.7 
+                      background: chargeLevel > 0.7
                         ? 'radial-gradient(circle at 50% 50%, #ffcf5c, #39d0ff)'
-                        : chargeLevel > 0 
+                        : chargeLevel > 0
                           ? 'radial-gradient(circle at 50% 50%, #39d0ff, #39d0ff)'
                           : '#39d0ff',
-                      boxShadow: chargeLevel > 0 
+                      boxShadow: chargeLevel > 0
                         ? `0 0 ${20 + chargeLevel * 20}px rgba(57, 208, 255, ${0.4 + chargeLevel * 0.5})`
                         : '0 0 12px rgba(57, 208, 255, 0.5)',
-                      animation: chargeLevel > 0 
-                        ? 'transmitter-charge 0.8s ease-in-out infinite' 
+                      animation: chargeLevel > 0
+                        ? 'transmitter-charge 0.8s ease-in-out infinite'
                         : 'transmitter-pulse 2s ease-in-out infinite',
                       transition: 'all 0.3s ease',
                     }} />
-                    
-                    {/* Small base plate */}
+
                     <div style={{
                       width: `${14 + chargeLevel * 4}px`,
                       height: '3px',
-                      background: chargeLevel > 0 
-                        ? 'rgba(57, 208, 255, 0.3)' 
+                      background: chargeLevel > 0
+                        ? 'rgba(57, 208, 255, 0.3)'
                         : 'rgba(31, 47, 49, 0.8)',
                       border: `1px solid ${chargeLevel > 0 ? 'rgba(57, 208, 255, 0.4)' : 'rgba(57, 208, 255, 0.15)'}`,
                       borderRadius: '1px',
                       marginTop: '1px',
                       transition: 'all 0.3s ease',
                     }} />
-                    
-                    {/* Tiny label */}
+
                     <span style={{
                       fontSize: '0.35rem',
                       letterSpacing: '0.08em',
-                      color: chargeLevel > 0 
-                        ? 'rgba(57, 208, 255, 0.8)' 
+                      color: chargeLevel > 0
+                        ? 'rgba(57, 208, 255, 0.8)'
                         : 'rgba(205, 216, 210, 0.3)',
                       marginTop: '2px',
                       fontFamily: '"IBM Plex Mono", monospace',
@@ -850,25 +902,24 @@ export default function Contact() {
                     </span>
                   </div>
 
-                  {/* Add the animations to CSS via style tag */}
                   <style dangerouslySetInnerHTML={{
                     __html: `
                       @keyframes transmitter-pulse {
-                        0%, 100% { 
+                        0%, 100% {
                           opacity: 1;
                           transform: scale(1);
                         }
-                        50% { 
+                        50% {
                           opacity: 0.6;
                           transform: scale(0.85);
                         }
                       }
                       @keyframes transmitter-charge {
-                        0%, 100% { 
+                        0%, 100% {
                           transform: scale(1);
                           box-shadow: 0 0 20px rgba(57, 208, 255, 0.6);
                         }
-                        50% { 
+                        50% {
                           transform: scale(1.15);
                           box-shadow: 0 0 40px rgba(57, 208, 255, 0.9), 0 0 60px rgba(255, 207, 92, 0.3);
                         }
@@ -880,7 +931,7 @@ export default function Contact() {
                     {allNodes.map((c, idx) => {
                       const isActive = activeId === c.id;
                       const isTransmittingThis = transmittingNode?.id === c.id;
-                      
+
                       return (
                         <li key={c.id} className={`node-wrapper ${c.dormant ? "node-wrapper--dormant" : ""}`} style={{ ...toPct(c.top), zIndex: 20 + idx }}>
                           <button
@@ -904,7 +955,6 @@ export default function Contact() {
                       );
                     })}
 
-                    {/* ── 3D Projected Floating HUD Card ── */}
                     {transmittingNode && activeNodeGeom && (
                       <li
                         className="node-wrapper node-3d-hud-wrapper"
@@ -951,7 +1001,7 @@ export default function Contact() {
                   <span>READOUT_DOCK</span>
                   <span className="readout-dot" aria-hidden="true" />
                 </div>
-                
+
                 <div className="readout-body">
                   {active ? (
                     <>
@@ -962,18 +1012,18 @@ export default function Contact() {
                         {active.tag}
                       </span>
                       <p className="readout-desc">{active.desc}</p>
-                      
+
                       {!active.dormant && (
                         <>
                           <div className="readout-value">{active.display}</div>
                           <div className="readout-actions">
-                            <button 
-                              className="readout-btn" 
+                            <button
+                              className="readout-btn"
                               onClick={() => handleCopy(active.copyValue || active.display)}
                             >
                               {copied ? "COPIED!" : "COPY_DATA"}
                             </button>
-                            
+
                             <button
                               className="readout-btn readout-btn--ghost"
                               onClick={() => triggerUplinkSequence(active)}
@@ -994,7 +1044,6 @@ export default function Contact() {
               </aside>
             </>
           ) : (
-            /* ── Fully Wired Mobile / List Mode ── */
             <div className="relay-list-mode">
               <ul className="mobile-chain">
                 {[...CHANNELS, CALENDLY].map((c) => {
@@ -1025,8 +1074,8 @@ export default function Contact() {
                             <>
                               <div className="readout-value">{c.display}</div>
                               <div className="readout-actions">
-                                <button 
-                                  className="readout-btn" 
+                                <button
+                                  className="readout-btn"
                                   onClick={() => handleCopy(c.copyValue || c.display)}
                                 >
                                   {copied && activeId === c.id ? "COPIED!" : "COPY_DATA"}
@@ -1049,6 +1098,47 @@ export default function Contact() {
             </div>
           )}
         </section>
+
+        {/* ── Chapter reveal ─────────────────────────────────────── */}
+        {revealOpen && (
+          <div
+            className={`chapter-reveal-overlay ${revealClosing ? "is-closing" : ""}`}
+            role="dialog"
+            aria-modal="true"
+            onClick={handleRevealAdvance}
+          >
+            <div
+              className="chapter-reveal-card"
+              ref={revealCardRef}
+              onClick={(e) => {
+                // Clicking inside the card (including dragging a
+                // scrollbar) never advances the story — only the
+                // backdrop click or the button below does. This is
+                // what lets people freely scroll/select text without
+                // accidentally skipping or closing it.
+                e.stopPropagation();
+              }}
+            >
+              {CONTACT_CHAPTER_PARAGRAPHS.slice(0, revealStep + 1).map((para, i) => (
+                <p key={i} className={i === revealStep ? "is-new" : ""}>
+                  {para}
+                </p>
+              ))}
+              <button
+                type="button"
+                className="chapter-reveal-close"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleRevealAdvance();
+                }}
+              >
+                {revealStep < CONTACT_CHAPTER_PARAGRAPHS.length - 1
+                  ? "[ click to continue ]"
+                  : "[ close ]"}
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </>
   );

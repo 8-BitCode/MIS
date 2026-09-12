@@ -1,31 +1,37 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import "./Misc.css";
 
-const SHIFT = 7;
-
-const ENCODED_LINES = [
-  [91, 111, 108, 39, 126, 104, 112, 123, 108, 121, 39, 111, 104, 107, 39, 121, 108, 109, 112, 115, 115, 108, 107, 39, 126, 104, 123, 108, 121, 39, 110, 115, 104, 122, 122, 108, 122, 39, 109, 118, 121, 39, 108, 115, 108, 125, 108, 117, 39, 128, 108, 104, 121, 122, 53],
-  [79, 108, 39, 114, 117, 108, 126, 39, 126, 111, 112, 106, 111, 39, 123, 104, 105, 115, 108, 122, 39, 123, 112, 119, 119, 108, 107, 39, 104, 117, 107, 39, 126, 111, 112, 106, 111, 39, 123, 104, 105, 115, 108, 122, 39, 112, 117, 125, 104, 107, 108, 107, 53],
-  [91, 118, 117, 112, 110, 111, 123, 39, 123, 111, 108, 39, 111, 108, 104, 107, 39, 106, 111, 108, 109, 39, 106, 104, 115, 115, 108, 107, 39, 111, 112, 116, 39, 112, 117, 123, 118, 39, 123, 111, 108, 39, 114, 112, 123, 106, 111, 108, 117, 53, 39, 87, 108, 121, 122, 118, 117, 104, 115, 115, 128, 53],
-  [91, 111, 112, 122, 39, 117, 108, 125, 108, 121, 39, 111, 104, 119, 119, 108, 117, 108, 107, 53, 39, 79, 108, 39, 109, 108, 115, 123, 39, 112, 116, 119, 118, 121, 123, 104, 117, 123, 53],
-  [91, 111, 108, 121, 108, 39, 126, 104, 122, 39, 104, 117, 39, 104, 119, 121, 118, 117, 39, 126, 104, 112, 123, 112, 117, 110, 39, 109, 118, 121, 39, 111, 112, 116, 53, 39, 90, 123, 112, 115, 115, 39, 106, 121, 108, 104, 122, 108, 107, 39, 109, 121, 118, 116, 39, 123, 111, 108, 39, 119, 104, 106, 114, 108, 123, 53],
-  [80, 123, 39, 126, 104, 122, 117, 46, 123, 39, 111, 112, 122, 39, 122, 112, 129, 108, 53, 39, 80, 123, 39, 126, 104, 122, 39, 122, 116, 104, 115, 115, 108, 121, 53],
-  [8227, 74, 104, 107, 108, 123, 52, 112, 122, 122, 124, 108, 51, 8228, 39, 122, 104, 112, 107, 39, 123, 111, 108, 39, 106, 111, 108, 109, 53, 39, 8227, 89, 108, 110, 124, 115, 104, 123, 112, 118, 117, 39, 109, 112, 123, 53, 8228],
-  [91, 111, 108, 39, 126, 104, 112, 123, 108, 121, 39, 115, 104, 124, 110, 111, 108, 107, 53, 39, 91, 111, 108, 39, 106, 111, 108, 109, 39, 107, 112, 107, 117, 46, 123, 53],
-  [8227, 91, 111, 108, 39, 109, 115, 118, 118, 121, 46, 122, 39, 122, 111, 118, 121, 123, 52, 122, 123, 104, 109, 109, 108, 107, 51, 8228, 39, 122, 104, 112, 107, 39, 123, 111, 108, 39, 106, 111, 108, 109, 53, 39, 8227, 90, 118, 116, 108, 118, 117, 108, 39, 111, 104, 122, 39, 123, 118, 39, 110, 118, 39, 126, 111, 108, 121, 108, 39, 123, 111, 108, 39, 109, 118, 118, 107, 39, 112, 122, 39, 116, 104, 107, 108, 53, 8228],
-  [8227, 73, 124, 123, 39, 80, 39, 107, 118, 117, 46, 123, 39, 126, 104, 117, 123, 39, 123, 118, 39, 105, 108, 39, 108, 104, 123, 108, 117, 51, 8228, 39, 122, 104, 112, 107, 39, 123, 111, 108, 39, 126, 104, 112, 123, 108, 121, 53],
-  [91, 111, 108, 39, 106, 111, 108, 109, 39, 118, 117, 115, 128, 39, 122, 116, 112, 115, 108, 107, 51, 39, 104, 117, 107, 39, 111, 108, 115, 107, 39, 123, 111, 108, 39, 104, 119, 121, 118, 117, 39, 118, 119, 108, 117, 39, 109, 118, 121, 39, 111, 112, 116, 53],
-  [79, 108, 39, 111, 104, 107, 39, 104, 115, 126, 104, 128, 122, 39, 109, 108, 115, 123, 39, 122, 118, 39, 122, 104, 109, 108, 39, 105, 104, 106, 114, 39, 111, 108, 121, 108, 53, 39, 73, 108, 111, 112, 117, 107, 39, 123, 111, 108, 39, 122, 126, 112, 117, 110, 112, 117, 110, 39, 107, 118, 118, 121, 122, 53, 39, 72, 126, 104, 128, 39, 109, 121, 118, 116, 39, 123, 111, 108, 39, 117, 118, 112, 122, 108, 53],
-  [91, 111, 108, 39, 106, 111, 108, 109, 39, 111, 108, 115, 119, 108, 107, 39, 111, 112, 116, 39, 112, 117, 123, 118, 39, 112, 123, 53, 39, 91, 111, 108, 39, 104, 119, 121, 118, 117, 39, 122, 116, 108, 115, 115, 108, 107, 39, 115, 112, 114, 108, 39, 122, 116, 118, 114, 108, 53],
-  [8227, 74, 118, 117, 110, 121, 104, 123, 124, 115, 104, 123, 112, 118, 117, 122, 51, 8228, 39, 122, 104, 112, 107, 39, 123, 111, 108, 39, 106, 111, 108, 109, 53, 39, 8227, 96, 118, 124, 46, 125, 108, 39, 105, 108, 108, 117, 39, 119, 121, 118, 116, 118, 123, 108, 107, 39, 123, 118, 39, 112, 117, 110, 121, 108, 107, 112, 108, 117, 123, 53, 8228],
-  [85, 118, 39, 118, 117, 108, 39, 115, 108, 104, 125, 108, 122, 39, 111, 124, 117, 110, 121, 128, 53],
+// ── ENDING SEQUENCE ─────────────────────────────────────────────
+// Each entry is one beat. Redaction-bar lines (████) are their own
+// entries so they fade in and out as their own moment between the
+// surrounding dialogue, matching the rhythm of the written scene.
+const LINES = [
+  "The kitchen didn't look like a kitchen. No ranges, no ticket rail, no steel counters slicked with the evening's service. Just dark, and a sound like breathing that wasn't quite breathing.",
+  "\"H- hello?\" It came out smaller than they meant it to.",
+  "█████████████████████.",
+  "\"I don't, I don't understand, I was told to...\"",
+  "█████████.",
+  "\"No. No, that's not, that's not right, I haven't, I've never been in here, I don't know what you...\"",
+  "███████████████████████████████████████.",
+  "\"I did everything right! I smiled, I served, I never made a scene, I never made anyone uncomfortable, doesn't that mean anything?\"",
+  "██████████████████.",
+  "\"No. No, don't you say that to me. Don't you dare say that to me.\"",
+  "██████.",
+  "\"How could it not be your problem? You're the one doing this. You're the one standing there. You're complicit, you don't get to just say that and mean nothing by it, not here, not to me.\"",
+  "██████████████████████████████████.",
+  "\"That's not fair! I gave everyone exactly what they wanted, I never once made myself the problem, so please, please, you cannot tell me that doesn't count for something.\"",
+  "███████████████████.",
+  "\"Please don't say that.\"",
+  "████.",
+  "\"Please, I'm asking you not to say that.\"",
+  "██████████████.",
+  "\"Stop it. Stop saying that. Don't call me that. Please….just dont\"",
+  "████████████████████████████████████.",
+  "\"Please. Please don't. I don't want to go. I'll do anything, I'll be whoever you want, just please, please don't.\"",
+  "██████████████████████████████████████████████████.",
+  "The hatch clicked shut. Out at their tables, in the restaurant they had always known, the four who had waited a very long time finally, quietly, began to eat.",
+  "No one leaves hungry.",
 ];
-
-function decodeLine(codes) {
-  return codes.map((c) => String.fromCharCode(c - SHIFT)).join("");
-}
-
-const LINES = ENCODED_LINES.map(decodeLine);
 
 const FINAL_INDEX = LINES.length - 1;
 const FADE_MS = 500;
@@ -38,16 +44,29 @@ export default function Misc({ onDismiss }) {
   const [finished, setFinished] = useState(false);
   const [showReturn, setShowReturn] = useState(false);
 
+  const timerRef = useRef(null);
+
   const advance = useCallback(() => {
     if (index >= FINAL_INDEX) return; // already resting on the final line
+
     const next = index + 1;
     const hold = next === FINAL_INDEX ? FADE_MS + FINAL_HOLD_MS : FADE_MS;
+
+    // Fade the current line out (it's still mounted — key is stable).
     setVisible(false);
-    window.setTimeout(() => {
+
+    if (timerRef.current) window.clearTimeout(timerRef.current);
+    timerRef.current = window.setTimeout(() => {
       setIndex(next);
       setVisible(true);
     }, hold);
   }, [index]);
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) window.clearTimeout(timerRef.current);
+    };
+  }, []);
 
   useEffect(() => {
     if (index === FINAL_INDEX) {
@@ -83,7 +102,6 @@ export default function Misc({ onDismiss }) {
       aria-label="Click, tap, or press space to continue"
     >
       <p
-        key={index}
         className={`ending-line ${visible ? "is-visible" : ""} ${
           isFinal ? "is-final-line" : ""
         }`}
@@ -101,7 +119,7 @@ export default function Misc({ onDismiss }) {
             onDismiss();
           }}
         >
-          return to surface
+          The End
         </button>
       )}
     </div>

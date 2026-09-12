@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo, memo } from "react";
 import "./Committee.css";
 import Nav from "./Nav";
-import { markStage, isTypingTarget } from "./clearance";
-// Asset imports
+import { markStage, useClearance } from "./clearance";
 import Sana1 from "../Assets/Sana1.jpeg";
 import Pau1 from "../Assets/Pau1.jpeg";
 import Pau2 from "../Assets/Pau2.jpeg";
@@ -96,9 +95,6 @@ const INITIAL_MEMBERS = [
 
 const DEPARTMENTS = ["ALL UNITS", "EXECUTIVE", "OPERATIONS", "ADVOCACY", "DEVELOPMENT"];
 
-// Most members belong to a single unit (dept is a string), but some sit
-// across two (dept is an array, e.g. Pau: OPERATIONS + EXECUTIVE). This
-// normalizes both shapes for filtering.
 function matchesDept(member, filter) {
   if (filter === "ALL UNITS") return true;
   const depts = Array.isArray(member.dept) ? member.dept : [member.dept];
@@ -106,6 +102,42 @@ function matchesDept(member, filter) {
 }
 
 const REDACT_TILES = Array.from({ length: 110 }, (_, i) => i);
+const ALIEN_NEAR_RADIUS = 70;
+const ALIEN_HIT_RADIUS = 24;
+const CLAMP_LEFT_MIN = 6;
+const CLAMP_LEFT_MAX = 94;
+const CLAMP_TOP_MIN = 8;
+const CLAMP_TOP_MAX = 92;
+const JOLT_TRIGGER_MARGIN = 4;
+
+// ── SECRET STORY DIALOG ──────────────────────────────────────────
+// Paste your full story here. Each string in the array will fade in 
+// as a new paragraph every time the user clicks.
+const COMMITTEE_CHAPTER_PARAGRAPHS = [
+  "\"No,\" he said, waving off the sommelier's fifth suggestion before they had even finished. \"What would they think if they saw me with a bottle so garish? I need something more appropriate, something more audience-friendly.\"",
+  "With a kind smile and a clenched jaw, the sommelier replied simply, \"I will check in the back.\"",
+  "There was no back. In fact, the restaurant had no sommelier. A waiter, befuddled by this situation for the briefest moment, smirked, thinking, Did he bring his own wine expert? before realizing it was their table.",
+  "\"It was too garish, wasn't it?\"",
+  "\"What was, sir?\"",
+  "\"The bottle, the bottle was too much!\" the man said with deep concern. \"Please don't tell the kitchen staff.\"",
+  "His concern was genuine, which stood in stark contrast to every instinct telling the waiter that the man standing right in front of them was deeply duplicitous.",
+  "\"My lips are sealed, sir. It's not my problem,\" said the waiter.",
+  "\"That's the exact kind of mindset I like, the kind that keeps me in this seat, getting served by strong men like you,\" the man said with all too much enthusiasm.",
+  "The waiter gritted their teeth. \"So, what will it be today, sir?\"",
+  "\"Well, what does the kitchen recommend? If you recall.\"",
+  "\"I'm not su...\"",
+  "\"Surprise me,\" the man said, throwing his menu down with a gnashing grin. \"Everyone's eating on my account anyway,\" he added much too audibly, in a clear attempt for the other tables to hear.",
+  "\"I will check in the ba... kitchen, sir.\"",
+  "\"No... no, my apologies. I'll actually have the chicken. The working man's meat.\"",
+  "\"Excellent choice, sir.\"",
+  "The waiter scurried along to an access panel in a private room. Knocking on the hatch, they called out, \"Uhh... the chicken dish, please.\"",
+  "Silence echoed.",
+  "\"For the wine guy?\"",
+  "As soon as they said it, the hatch opened, sliding out an exquisite yet small dish of marbled chicken.",
+  "\"That was quick?!\"",
+  "Bringing themself back to composure, the waiter gracefully walked back to the table, dish in hand. \"Compliments of the chef.\"",
+  "The man hadn't even noticed the waiter had arrived, peering all around him, trying to listen in on the other tables. Something told the waiter he wouldn't be touching his food.",
+];
 
 function stringPath(x1, y1, x2, y2, seed) {
   let hash = 0;
@@ -155,7 +187,6 @@ const Portrait = memo(({ member, photoIndex = 0 }) => {
   );
 });
 
-// Helper component to style glowing text for specific keywords
 const FormattedIntel = ({ text }) => {
   if (!text) return null;
   const parts = text.split(/(alien)/gi);
@@ -175,24 +206,15 @@ const FormattedIntel = ({ text }) => {
 };
 
 export default function Committee() {
-  // ── TEMP / PLACEHOLDER ─────────────────────────────────────────
-  // Stand-in for this page's real puzzle. Press "1" anywhere (while
-  // not typing in a real field) to mark this stage solved. Replace
-  // the condition inside onKeyDown with the real puzzle check once
-  // it's designed — the markStage("committee") call is the permanent
-  // part, everything else here is scaffolding.
-  useEffect(() => {
-    const onKeyDown = (e) => {
-      if (isTypingTarget(e.target)) return;
-      if (e.key === "1") markStage("committee");
-    };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, []);
-  // ── END TEMP / PLACEHOLDER ─────────────────────────────────────
-
+  const clearedStages = useClearance();
+  const committeeSolved = clearedStages.has("committee");
 
   const [members, setMembers] = useState(INITIAL_MEMBERS);
+  const [hatchOpen, setHatchOpen] = useState(false);
+  const [revealOpen, setRevealOpen] = useState(false);
+  const [revealClosing, setRevealClosing] = useState(false);
+  const [revealStep, setRevealStep] = useState(0);
+  const alienRef = useRef(null);
   const [activeId, setActiveId] = useState(null);
   const [activePhotoIndex, setActivePhotoIndex] = useState(0);
   const [closing, setClosing] = useState(false);
@@ -203,11 +225,31 @@ export default function Committee() {
   const [boardZoomed, setBoardZoomed] = useState(false);
   const [zoomVars, setZoomVars] = useState({ "--zoom-x": "50%", "--zoom-y": "50%" });
 
+  const [joltingIds, setJoltingIds] = useState({});
+
   const boardRef = useRef(null);
   const draggingRef = useRef(null);
   const triggerRef = useRef(null);
   const closeBtnRef = useRef(null);
   const openTimestampRef = useRef(0);
+  const joltTimersRef = useRef({});
+  const lastValidPosRef = useRef(null);
+  const revealCardRef = useRef(null);
+
+  // Lock the page scroll from JS too — the CSS `:has()` rule that does
+  // this normally doesn't work in every browser, and when it silently
+  // fails, swiping/scrolling over the reveal card scrolls the real
+  // page underneath it instead of the card itself.
+  useEffect(() => {
+    const prevOverflow = document.body.style.overflow;
+    const prevHeight = document.body.style.height;
+    document.body.style.overflow = "hidden";
+    document.body.style.height = "100dvh";
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      document.body.style.height = prevHeight;
+    };
+  }, []);
 
   const activeMember = useMemo(() => members.find((m) => m.id === activeId), [members, activeId]);
 
@@ -220,6 +262,26 @@ export default function Committee() {
     () => visibleMembers.findIndex((m) => m.id === activeId),
     [visibleMembers, activeId]
   );
+
+  const triggerJolt = useCallback((id) => {
+    setJoltingIds((prev) => ({ ...prev, [id]: true }));
+    if (joltTimersRef.current[id]) clearTimeout(joltTimersRef.current[id]);
+    joltTimersRef.current[id] = window.setTimeout(() => {
+      setJoltingIds((prev) => {
+        const next = { ...prev };
+        delete next[id];
+        return next;
+      });
+      delete joltTimersRef.current[id];
+    }, 450);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      Object.values(joltTimersRef.current).forEach(clearTimeout);
+      joltTimersRef.current = {};
+    };
+  }, []);
 
   const openFile = useCallback((member, targetElement) => {
     if (targetElement) triggerRef.current = targetElement;
@@ -250,11 +312,6 @@ export default function Committee() {
 
   const handleCyclePhoto = (e) => {
     e.stopPropagation();
-    // Guard against the synthetic "ghost click" browsers fire after a
-    // touch tap. On mobile, opening the dossier from a pin tap lands the
-    // photo frame right under the finger, so that trailing click event
-    // was landing here too and immediately advancing the photo. Ignore
-    // clicks that happen right after the dossier opens.
     if (Date.now() - openTimestampRef.current < 300) return;
     if (activeMember && activeMember.photos && activeMember.photos.length > 1) {
       setActivePhotoIndex((prevIndex) => (prevIndex + 1) % activeMember.photos.length);
@@ -263,14 +320,24 @@ export default function Committee() {
 
   const handlePointerDown = (member, event) => {
     if (event.button !== undefined && event.button !== 0) return;
+    lastValidPosRef.current = { top: member.pos.top, left: member.pos.left };
     draggingRef.current = {
       member,
       targetElement: event.currentTarget,
       startX: event.clientX,
       startY: event.clientY,
-      hasDragged: false
+      hasDragged: false,
+      joltedThisDrag: false
     };
   };
+
+  const distanceToAlien = useCallback((clientX, clientY) => {
+    if (!alienRef.current) return Infinity;
+    const a = alienRef.current.getBoundingClientRect();
+    const ax = a.left + a.width / 2;
+    const ay = a.top + a.height / 2;
+    return Math.hypot(clientX - ax, clientY - ay);
+  }, []);
 
   const handlePointerMove = useCallback((e) => {
     const current = draggingRef.current;
@@ -283,18 +350,82 @@ export default function Committee() {
     if (current.hasDragged) {
       const draggedId = current.member.id;
       const rect = boardRef.current.getBoundingClientRect();
-      const left = Math.max(6, Math.min(94, ((e.clientX - rect.left) / rect.width) * 100));
-      const top = Math.max(8, Math.min(92, ((e.clientY - rect.top) / rect.height) * 100));
+
+      const isAkram = draggedId === "member-6";
+      const nearAlien = isAkram && distanceToAlien(e.clientX, e.clientY) < ALIEN_NEAR_RADIUS;
+      setHatchOpen(nearAlien);
+
+      const rawLeft = ((e.clientX - rect.left) / rect.width) * 100;
+      const rawTop = ((e.clientY - rect.top) / rect.height) * 100;
+
+      const insideBounds =
+        rawLeft >= CLAMP_LEFT_MIN && rawLeft <= CLAMP_LEFT_MAX &&
+        rawTop  >= CLAMP_TOP_MIN  && rawTop  <= CLAMP_TOP_MAX;
+
+      const pushedPastLeft =
+        rawLeft < CLAMP_LEFT_MIN - JOLT_TRIGGER_MARGIN ||
+        rawLeft > CLAMP_LEFT_MAX + JOLT_TRIGGER_MARGIN;
+      const pushedPastTop =
+        rawTop < CLAMP_TOP_MIN - JOLT_TRIGGER_MARGIN ||
+        rawTop > CLAMP_TOP_MAX + JOLT_TRIGGER_MARGIN;
+      const pushedPastBoundary = pushedPastLeft || pushedPastTop;
+
+      if (!nearAlien && pushedPastBoundary && !current.joltedThisDrag) {
+        current.joltedThisDrag = true;
+        triggerJolt(draggedId);
+
+        if (lastValidPosRef.current) {
+          const snap = lastValidPosRef.current;
+          setMembers((prev) =>
+            prev.map((m) => (m.id === draggedId ? { ...m, pos: { top: snap.top, left: snap.left } } : m))
+          );
+        }
+        return;
+      }
+
+      if (!nearAlien && insideBounds) {
+        lastValidPosRef.current = {
+          left: Math.max(CLAMP_LEFT_MIN, Math.min(CLAMP_LEFT_MAX, rawLeft)),
+          top: Math.max(CLAMP_TOP_MIN, Math.min(CLAMP_TOP_MAX, rawTop))
+        };
+        if (current.joltedThisDrag) current.joltedThisDrag = false;
+      }
+
+      const left = nearAlien ? rawLeft : Math.max(CLAMP_LEFT_MIN, Math.min(CLAMP_LEFT_MAX, rawLeft));
+      const top = nearAlien ? rawTop : Math.max(CLAMP_TOP_MIN, Math.min(CLAMP_TOP_MAX, rawTop));
       setMembers((prev) => prev.map((m) => (m.id === draggedId ? { ...m, pos: { top, left } } : m)));
     }
-  }, []);
+  }, [distanceToAlien, triggerJolt]);
 
-  const handlePointerUp = useCallback(() => {
+  const handlePointerUp = useCallback((e) => {
     const current = draggingRef.current;
     if (!current) return;
-    if (!current.hasDragged) openFile(current.member, current.targetElement);
+
+    if (!current.hasDragged) {
+      openFile(current.member, current.targetElement);
+    } else if (current.member.id === "member-6") {
+      const landedOnAlien = distanceToAlien(e.clientX, e.clientY) < ALIEN_HIT_RADIUS;
+
+      if (landedOnAlien) {
+        markStage("committee");
+        setRevealOpen(true);
+        setMembers((prev) =>
+          prev.map((m) => (m.id === "member-6" ? { ...m, pos: { top: 82, left: 50 } } : m))
+        );
+      } else if (current.joltedThisDrag) {
+        const snap = lastValidPosRef.current;
+        if (snap) {
+          setMembers((prev) =>
+            prev.map((m) => (m.id === "member-6" ? { ...m, pos: { top: snap.top, left: snap.left } } : m))
+          );
+        }
+      }
+    }
+
+    setHatchOpen(false);
     draggingRef.current = null;
-  }, [openFile]);
+    lastValidPosRef.current = null;
+  }, [openFile, distanceToAlien]);
 
   useEffect(() => {
     window.addEventListener("pointermove", handlePointerMove);
@@ -368,6 +499,33 @@ export default function Committee() {
     return list;
   }, [members]);
 
+  const handleCloseReveal = useCallback(() => {
+    setRevealClosing(true);
+    setTimeout(() => {
+      setRevealOpen(false);
+      setRevealClosing(false);
+      setRevealStep(0);
+    }, 300);
+  }, []);
+
+  const handleRevealAdvance = useCallback(() => {
+    if (revealStep < COMMITTEE_CHAPTER_PARAGRAPHS.length - 1) {
+      setRevealStep((s) => s + 1);
+    } else {
+      handleCloseReveal();
+    }
+  }, [revealStep, handleCloseReveal]);
+
+  // Auto-scroll the reveal card to the bottom as new paragraphs appear
+  useEffect(() => {
+    if (revealOpen && revealCardRef.current) {
+      revealCardRef.current.scrollTo({
+        top: revealCardRef.current.scrollHeight,
+        behavior: "smooth",
+      });
+    }
+  }, [revealStep, revealOpen]);
+
   return (
     <>
       <Nav />
@@ -402,9 +560,10 @@ export default function Committee() {
           </nav>
         </header>
 
-        <div className="board-frame ascii-box">
+        <div className={`board-frame ascii-box ${hatchOpen ? "hatch-open" : ""}`}>
           <AsciiCorners />
-          <div className={`board ${boardZoomed ? "is-zoomed" : ""}`} ref={boardRef} style={zoomVars}>
+          <span className="hatch-gap" aria-hidden="true" />
+          <div className={`board ${boardZoomed ? "is-zoomed" : ""} ${hatchOpen ? "hatch-open" : ""}`} ref={boardRef} style={zoomVars}>
             <svg className="board-strings" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
               {stringConnections.map((s) => {
                 const isConnected = hoveredId === s.fromId || hoveredId === s.toId;
@@ -426,10 +585,11 @@ export default function Committee() {
             <ul className="board-list" aria-label="Committee members board">
               {members.map((m) => {
                 const matchesFilter = matchesDept(m, deptFilter);
+                const isJolting = !!joltingIds[m.id];
                 return (
                   <li
                     key={m.id}
-                    className={`pin-wrapper ${!matchesFilter ? "is-filtered-out" : ""}`}
+                    className={`pin-wrapper ${!matchesFilter ? "is-filtered-out" : ""} ${isJolting ? "is-jolting" : ""}`}
                     style={{ top: `${m.pos.top}%`, left: `${m.pos.left}%` }}
                     onPointerDown={(e) => handlePointerDown(m, e)}
                     onMouseEnter={() => setHoveredId(m.id)}
@@ -561,6 +721,70 @@ export default function Committee() {
                   </button>
                 </div>
               </div>
+            </div>
+          </div>
+        )}
+
+        <span
+          ref={alienRef}
+          className={`alien-mark ${committeeSolved ? "is-known" : ""}`}
+          aria-hidden="true"
+          onClick={() => {
+            if (committeeSolved) setRevealOpen(true);
+          }}
+        >
+          <svg viewBox="0 0 24 24" width="18" height="18">
+            <ellipse cx="12" cy="10" rx="7" ry="8" fill="none" stroke="currentColor" strokeWidth="0.7" />
+            <ellipse cx="8.7" cy="9.5" rx="1.5" ry="2" fill="currentColor" />
+            <ellipse cx="15.3" cy="9.5" rx="1.5" ry="2" fill="currentColor" />
+            <path d="M6 15c2 3 10 3 12 0" fill="none" stroke="currentColor" strokeWidth="0.6" />
+          </svg>
+        </span>
+
+        {revealOpen && (
+          <div
+            className={`chapter-reveal-overlay ${revealClosing ? "is-closing" : ""}`}
+            role="dialog"
+            aria-modal="true"
+            onClick={handleRevealAdvance}
+          >
+            <div
+              className="chapter-reveal-card"
+              ref={revealCardRef}
+              onClick={(e) => {
+                // Clicking inside the card (including dragging an
+                // overlay-style scrollbar, which draws on top of the
+                // content instead of reserving its own space) no
+                // longer advances the story — only clicking the
+                // backdrop or the explicit button below does. This
+                // is what lets people freely scroll/select text
+                // without accidentally skipping or closing it.
+                e.stopPropagation();
+              }}
+            >
+              {COMMITTEE_CHAPTER_PARAGRAPHS.slice(0, revealStep + 1).map((para, i) => (
+                <p
+                  key={i}
+                  className={i === revealStep ? "is-new" : ""}
+                  style={{
+                    animation: i === revealStep ? `reveal-line-in 0.6s ease both` : "none",
+                    opacity: 1,
+                    transform: "none",
+                  }}
+                >
+                  {para}
+                </p>
+              ))}
+              <button
+                type="button"
+                className="chapter-reveal-close"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleRevealAdvance();
+                }}
+              >
+                {revealStep < COMMITTEE_CHAPTER_PARAGRAPHS.length - 1 ? "[ click to continue ]" : "[ close ]"}
+              </button>
             </div>
           </div>
         )}

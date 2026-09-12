@@ -7,9 +7,6 @@ import { useEvidenceSFX } from "./useEvidenceSFX";
 import { useClearance, markStage, isTypingTarget, isAllComplete, STAGES } from "./clearance";
 import Ending from "./Misc";
 
-// The word each sector's dossier hands the reader, keyed to clearance
-// stage id. Assembled in STAGES order they spell the Society's own
-// line back at whoever reads it: NO · ONE · LEAVES · HUNGRY.
 const CIPHER_ANSWERS = {
   committee: "no",
   events: "one",
@@ -24,7 +21,6 @@ const CIPHER_LABELS = {
   contact: "D",
 };
 
-// Import all spy video assets
 import spyVideo1 from "../Assets/spy.mp4";
 import spyVideo2 from "../Assets/spy2.mp4";
 import spyVideo3 from "../Assets/spy3.mp4";
@@ -41,7 +37,6 @@ const AsciiCorners = memo(() => (
   </>
 ));
 
-// ── KEY FACTS & FIGURES ───────────────────────────────────────────
 const STATS = [
   { code: "01", label: "SOCIETY FOUNDED", value: "2025" },
   { code: "02", label: "ACTIVE MEMBERS", value: "70+" },
@@ -51,7 +46,6 @@ const STATS = [
   { code: "06", label: "ACADEMIC DISCIPLINES", value: "8+" },
 ];
 
-// ── QUICK ACCESS / SITE LINKS ─────────────────────────────────────
 const CASE_FILES = [
   {
     code: "01",
@@ -104,7 +98,7 @@ function useScrollReveal() {
           observer.disconnect();
         }
       },
-      { threshold: 0.15 } 
+      { threshold: 0.15 }
     );
     observer.observe(node);
     return () => observer.disconnect();
@@ -269,8 +263,17 @@ const STAGE_ACCENT = {
   contact: "var(--accent-contact)",
 };
 
-function ClearanceDiamonds({ stages }) {
+function ClearanceDiamonds({ stages, onUnlock }) {
   const complete = STAGES.every((id) => stages.has(id));
+
+  // When every stage is filled, the diamonds hand off to the pattern
+  // lock. The player draws a path through a 3×3 grid of dots; correct
+  // pattern opens the clearance reveal. Until then, this is the quiet
+  // progress indicator it's always been.
+  if (complete) {
+    return <ClearancePattern onUnlock={onUnlock} />;
+  }
+
   return (
     <div className="clearance-row" aria-hidden="true">
       {STAGES.map((id) => (
@@ -282,9 +285,187 @@ function ClearanceDiamonds({ stages }) {
           ◆
         </span>
       ))}
-      <span className={`clearance-lock ${complete ? "is-active" : ""}`}>
-        {complete ? "⊙" : "⊘"}
-      </span>
+      <span className="clearance-lock">⊘</span>
+    </div>
+  );
+}
+
+// ── Pattern lock (clearance unlock) ───────────────────────────────
+// A 3×3 grid of dots. The player drags a continuous path through them.
+// Index layout:
+//   0 1 2
+//   3 4 5
+//   6 7 8
+// The correct pattern is a five-point path through the corners:
+// bottom-right → bottom-left → top-right → top-left → centre.
+const PATTERN_GRID_SIZE = 3;
+const PATTERN_ANSWER = [8, 6, 2, 0];
+
+function ClearancePattern({ onUnlock }) {
+  const [path, setPath] = useState([]);
+  const [dragging, setDragging] = useState(false);
+  const [pointerPos, setPointerPos] = useState({ x: 0, y: 0 });
+  const [rejected, setRejected] = useState(false);
+  const [solved, setSolved] = useState(false);
+
+  const gridRef = useRef(null);
+  const dotsRef = useRef([]);
+  const dragRef = useRef({ active: false });
+
+  const gridSize = PATTERN_GRID_SIZE;
+  const svgSize = 60;
+  const dotSpacing = svgSize / (gridSize + 1);
+
+  const dotPos = (i) => {
+    const row = Math.floor(i / gridSize);
+    const col = i % gridSize;
+    return {
+      x: (col + 1) * dotSpacing,
+      y: (row + 1) * dotSpacing,
+    };
+  };
+
+  // Hit-test a client-space point against each dot. Radius is generous
+  // so gliding between adjacent dots registers cleanly.
+  const hitTestDot = (clientX, clientY) => {
+    for (let i = 0; i < dotsRef.current.length; i++) {
+      const node = dotsRef.current[i];
+      if (!node) continue;
+      const r = node.getBoundingClientRect();
+      const cx = r.left + r.width / 2;
+      const cy = r.top + r.height / 2;
+      if (Math.hypot(clientX - cx, clientY - cy) < 18) return i;
+    }
+    return null;
+  };
+
+  const startDrag = (e) => {
+    if (solved) return;
+    if (e.button !== undefined && e.button !== 0) return;
+    e.preventDefault();
+    dragRef.current.active = true;
+    setDragging(true);
+    setPointerPos({ x: e.clientX, y: e.clientY });
+
+    const hit = hitTestDot(e.clientX, e.clientY);
+    setPath(hit === null ? [] : [hit]);
+  };
+
+  useEffect(() => {
+    if (!dragging) return undefined;
+
+    const onMove = (e) => {
+      setPointerPos({ x: e.clientX, y: e.clientY });
+      const hit = hitTestDot(e.clientX, e.clientY);
+      if (hit === null) return;
+      setPath((prev) => (prev.includes(hit) ? prev : [...prev, hit]));
+    };
+
+    const onUp = () => {
+      dragRef.current.active = false;
+      setDragging(false);
+      setPath((prev) => {
+        const correct =
+          prev.length === PATTERN_ANSWER.length &&
+          prev.every((v, i) => v === PATTERN_ANSWER[i]);
+
+        if (correct) {
+          setSolved(true);
+          window.setTimeout(() => onUnlock(), 420);
+        } else if (prev.length > 0) {
+          setRejected(true);
+          window.setTimeout(() => {
+            setRejected(false);
+            setPath([]);
+          }, 460);
+        }
+        return prev;
+      });
+    };
+
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+    window.addEventListener("pointercancel", onUp);
+    return () => {
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+      window.removeEventListener("pointercancel", onUp);
+    };
+  }, [dragging, onUnlock]);
+
+  // Convert the pointer's client position into SVG-space so the trail's
+  // live endpoint follows the finger.
+  const pointerSvg = useMemo(() => {
+    if (!gridRef.current) return null;
+    const r = gridRef.current.getBoundingClientRect();
+    const scaleX = svgSize / r.width;
+    const scaleY = svgSize / r.height;
+    return {
+      x: (pointerPos.x - r.left) * scaleX,
+      y: (pointerPos.y - r.top) * scaleY,
+    };
+  }, [pointerPos]);
+
+  const trailPoints = path.map((i) => dotPos(i));
+
+  return (
+    <div
+      className={`pattern-lock ${rejected ? "is-rejected" : ""} ${solved ? "is-solved" : ""}`}
+      role="group"
+      aria-label="Clearance lock — draw the unlock pattern"
+    >
+      <div
+        ref={gridRef}
+        className="pattern-grid"
+        onPointerDown={startDrag}
+      >
+        <svg
+          className="pattern-trail"
+          viewBox={`0 0 ${svgSize} ${svgSize}`}
+          preserveAspectRatio="none"
+          aria-hidden="true"
+        >
+          {trailPoints.length > 1 && (
+            <polyline
+              points={trailPoints.map((p) => `${p.x},${p.y}`).join(" ")}
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.6"
+              strokeLinejoin="round"
+              strokeLinecap="round"
+            />
+          )}
+          {dragging && pointerSvg && trailPoints.length > 0 && (
+            <line
+              x1={trailPoints[trailPoints.length - 1].x}
+              y1={trailPoints[trailPoints.length - 1].y}
+              x2={pointerSvg.x}
+              y2={pointerSvg.y}
+              stroke="currentColor"
+              strokeWidth="1.6"
+              strokeLinecap="round"
+              strokeDasharray="2 2"
+            />
+          )}
+        </svg>
+
+        {Array.from({ length: gridSize * gridSize }).map((_, i) => {
+          const { x, y } = dotPos(i);
+          const isActive = path.includes(i);
+          return (
+            <span
+              key={i}
+              ref={(node) => { dotsRef.current[i] = node; }}
+              className={`pattern-dot ${isActive ? "is-active" : ""}`}
+              style={{
+                left: `${(x / svgSize) * 100}%`,
+                top: `${(y / svgSize) * 100}%`,
+              }}
+              aria-hidden="true"
+            />
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -461,9 +642,6 @@ function ClearanceReveal({ onDismiss }) {
     }
   };
 
-  // Once the cipher's right, the whole reveal hands off to Ending —
-  // no auth-theme red, no ASCII marks, no globe. That tonal break is
-  // the point: everything before this was still the dashboard.
   if (unsealed) {
     return (
       <div className="clearance-reveal" role="dialog" aria-label="Declassified transmission">
@@ -569,6 +747,7 @@ export default function Home() {
 
   const stages = useClearance();
   const [revealDismissed, setRevealDismissed] = useState(false);
+  const [padlockUnlocked, setPadlockUnlocked] = useState(false);
 
   useEffect(() => {
     const KEY_TO_STAGE = { a: "committee", b: "events", c: "partnerships", d: "contact" };
@@ -617,7 +796,7 @@ export default function Home() {
   const handleVideoEnd = () => {
     const nextIdx = (activeVideoIndex + 1) % VIDEOS.length;
     setActiveVideoIndex(nextIdx);
-    
+
     if (videoRefs.current[nextIdx]) {
       videoRefs.current[nextIdx].currentTime = 0;
       videoRefs.current[nextIdx].play().catch(() => {});
@@ -631,8 +810,8 @@ export default function Home() {
 
   return (
     <div className="home-page">
-      <div 
-        className={`hud-crosshair ${isHovering ? "is-locked" : ""}`} 
+      <div
+        className={`hud-crosshair ${isHovering ? "is-locked" : ""}`}
         style={{ transform: `translate(${mousePos.x}px, ${mousePos.y}px)` }}
         aria-hidden="true"
       >
@@ -645,8 +824,8 @@ export default function Home() {
       <Nav />
 
       <section className="hero">
-        <div 
-          className="hero-media" 
+        <div
+          className="hero-media"
           style={{ transform: `translateY(${scrollY * 0.35}px)` }}
         >
           {VIDEOS.map((src, idx) => (
@@ -768,8 +947,7 @@ export default function Home() {
                 OSINT & CYBER
               </span>
               <span className="tag staggered-fade" style={{ '--stagger': 3 }}>
-                NATIONAL SECURITY
-              </span>
+                NATIONAL SECURITY              </span>
             </div>
           </div>
         </div>
@@ -868,10 +1046,13 @@ export default function Home() {
             </React.Fragment>
           ))}
         </span>
-        <ClearanceDiamonds stages={stages} />
+        <ClearanceDiamonds
+          stages={stages}
+          onUnlock={() => setPadlockUnlocked(true)}
+        />
       </footer>
 
-      {isAllComplete(stages) && !revealDismissed && (
+      {isAllComplete(stages) && padlockUnlocked && !revealDismissed && (
         <ClearanceReveal onDismiss={() => setRevealDismissed(true)} />
       )}
     </div>

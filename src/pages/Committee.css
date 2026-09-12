@@ -342,6 +342,24 @@ body:has(.roster-page) {
   pointer-events: none;
 }
 
+.pin-wrapper.is-jolting {
+  animation: pin-jolt 0.42s cubic-bezier(0.22, 0.9, 0.28, 1);
+}
+
+@keyframes pin-jolt {
+  0%   { transform: translate(-50%, -50%) scale(1); }
+  18%  { transform: translate(-50%, -50%) scale(1.08); filter: brightness(1.4); }
+  40%  { transform: translate(-50%, -50%) scale(0.96); filter: brightness(1); }
+  65%  { transform: translate(-50%, -50%) scale(1.02); }
+  100% { transform: translate(-50%, -50%) scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pin-wrapper.is-jolting {
+    animation: none !important;
+  }
+}
+
 .pin-card {
   --bg-behind: var(--panel);
   display: flex;
@@ -857,6 +875,204 @@ body:has(.roster-page) {
 @keyframes pulse-indicator {
   0%, 100% { opacity: 0.85; }
   50% { opacity: 1; }
+}
+
+/* ── Hidden mark (committee puzzle) ──────────────────────────────
+   Deliberately near-invisible. Lives outside the board entirely, in
+   the corner of the viewport, so it never affects layout on this or
+   any other page. Only reacts to Akram's pin during a drag. */
+.alien-mark {
+  position: fixed;
+  right: 14px;
+  bottom: 14px;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  color: var(--fg);
+  opacity: 0.3;
+  pointer-events: none;
+  transition: opacity 0.6s ease;
+}
+
+.alien-mark.is-known {
+  opacity: 0.09;
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.alien-mark.is-known:hover {
+  opacity: 0.22;
+}
+
+/* Gap that opens in the board-frame's border near the mark while
+   Akram's pin is close enough to pass through. Purely decorative —
+   the actual bounds check happens in JS against the mark itself. */
+.hatch-gap {
+  position: absolute;
+  right: -1px;
+  bottom: -1px;
+  z-index: 3;
+  width: 0;
+  height: 0;
+  background: var(--bg);
+  box-shadow: 0 0 0 0 rgba(57, 255, 20, 0);
+  transition: width 0.35s ease, height 0.35s ease, box-shadow 0.35s ease;
+  pointer-events: none;
+}
+
+.board-frame.hatch-open {
+  overflow: visible;
+}
+
+.board-frame.hatch-open .hatch-gap {
+  width: 18px;
+  height: 18px;
+  box-shadow: 0 0 10px 1px rgba(57, 255, 20, 0.35);
+}
+
+.board.hatch-open {
+  overflow: visible;
+}
+
+/* ── Chapter reveal ──────────────────────────────────────────────
+   Deliberate tonal break from the terminal aesthetic, same idea as
+   the ending sequence: plain serif, dark, quiet. Whole chapter shown
+   at once, everything fits without scrolling — font size scales to
+   the viewport rather than the block growing past it. */
+.roster-page .chapter-reveal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: radial-gradient(ellipse at 50% 45%, rgba(20, 16, 10, 0.97) 0%, rgba(3, 2, 1, 0.98) 72%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(1.25rem, 5vh, 3.5rem) clamp(1.25rem, 6vw, 3rem);
+  animation: reveal-overlay-in 0.7s ease both;
+}
+
+@keyframes reveal-overlay-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.roster-page .chapter-reveal-card {
+  width: 100%;
+  max-width: 36rem;
+  max-height: 80vh;
+  max-height: 80dvh;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* old Edge/IE */
+  color: #ece7dc;
+  font-family: Georgia, "Iowan Old Style", serif;
+  font-size: clamp(0.72rem, 1.85vh, 1.05rem);
+  line-height: 1.65;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  animation: reveal-card-in 0.8s cubic-bezier(0.16, 0.8, 0.3, 1) 0.15s both;
+  padding-right: 0.5rem;
+}
+
+.roster-page .chapter-reveal-card::-webkit-scrollbar {
+  display: none; /* Chrome/Safari/Edge */
+}
+
+@keyframes reveal-card-in {
+  from { opacity: 0; transform: translateY(10px) scale(0.985); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.roster-page .chapter-reveal-card p {
+  margin: 0 0 1em;
+  opacity: 1;
+  transform: none;
+}
+
+.roster-page .chapter-reveal-card p.is-new {
+  animation: reveal-line-in 0.6s ease both;
+}
+
+@keyframes reveal-line-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.roster-page .chapter-reveal-card p:last-of-type {
+  margin-bottom: 0;
+}
+
+.roster-page .chapter-reveal-card p:first-of-type::first-letter {
+  color: var(--accent);
+  font-size: 1.5em;
+  font-weight: 600;
+  line-height: 1;
+  padding-right: 0.02em;
+}
+
+.roster-page .chapter-reveal-close {
+  align-self: center;
+  margin-top: clamp(0.9rem, 3vh, 1.6rem);
+  background: none;
+  border: none;
+  color: var(--fg-dim);
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  cursor: pointer;
+  padding: 0.4rem 0.8rem;
+  opacity: 1;
+  transition: color 0.2s ease, opacity 0.2s ease;
+}
+
+.roster-page .chapter-reveal-close:hover {
+  color: var(--accent);
+}
+
+@media (max-height: 34rem), (max-width: 26rem) {
+  .roster-page .chapter-reveal-card {
+    font-size: clamp(0.65rem, 2.3vh, 0.85rem);
+    line-height: 1.5;
+  }
+  .roster-page .chapter-reveal-card p {
+    margin-bottom: 0.7em;
+  }
+}
+
+/* ── Chapter reveal — fade out on close ─────────────────────── */
+@keyframes reveal-overlay-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+.roster-page .chapter-reveal-overlay.is-closing {
+  animation: reveal-overlay-out 0.3s ease both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .roster-page .chapter-reveal-overlay,
+  .roster-page .chapter-reveal-card,
+  .roster-page .chapter-reveal-card p,
+  .roster-page .chapter-reveal-close,
+  .roster-page .chapter-reveal-overlay.is-closing,
+  .roster-page .chapter-reveal-card p.is-new {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  .alien-mark,
+  .hatch-gap {
+    transition: none !important;
+  }
 }
 
 /* ── Glowing Animated Green Alien Text ──────────────────────────── */

@@ -1,16 +1,12 @@
-import React, { useEffect, useRef, useState, memo } from "react";
+import React, { useEffect, useRef, useState, memo, useCallback } from "react";
 import Nav from "./Nav";
-import { markStage, isTypingTarget } from "./clearance";import DecryptText from "./DecryptText";
+import { markStage, isTypingTarget } from "./clearance";
+import DecryptText from "./DecryptText";
 import "./Partnerships.css";
 
 // Receiving inbox for tender transmissions.
 const PARTNERSHIP_EMAIL = "manchester.intelligence@manchesterstudentsunion.com";
 
-// Free, unlimited, no-signup form-to-email relay — https://formsubmit.co
-// NOTE: the first submission ever sent to this address triggers a one-time
-// confirmation email from FormSubmit that someone must click to activate
-// delivery. Until that's confirmed, requests still return success but the
-// email itself won't land.
 const FORM_ENDPOINT = `https://formsubmit.co/ajax/${PARTNERSHIP_EMAIL}`;
 
 const AsciiCorners = memo(() => (
@@ -22,7 +18,6 @@ const AsciiCorners = memo(() => (
   </>
 ));
 
-// ── SPONSORSHIP SLOTS ────────────────────────────────────────────────
 const SPONSOR_NODES = [
   {
     id: 0,
@@ -49,7 +44,7 @@ function WireframeCanvas({ selectedSponsor, onSelectSponsor }) {
   const canvasRef = useRef(null);
   const isDraggingRef = useRef(false);
   const lastMouseRef = useRef({ x: 0, y: 0 });
-  
+
   const rotRef = useRef({ x: 0.2, y: 0.5 });
   const velocityRef = useRef({ x: 0, y: 0.005 });
 
@@ -92,12 +87,12 @@ function WireframeCanvas({ selectedSponsor, onSelectSponsor }) {
       if (!isDraggingRef.current) {
         rotRef.current.x += velocityRef.current.x;
         rotRef.current.y += velocityRef.current.y;
-        
+
         velocityRef.current.x *= 0.90;
         if (Math.abs(velocityRef.current.y) > 0.005) {
-           velocityRef.current.y *= 0.95;
+          velocityRef.current.y *= 0.95;
         } else {
-           velocityRef.current.y = 0.005;
+          velocityRef.current.y = 0.005;
         }
       }
 
@@ -119,10 +114,10 @@ function WireframeCanvas({ selectedSponsor, onSelectSponsor }) {
 
         const sponsorMatch = SPONSOR_NODES.find(s => s.nodeIndex === idx);
 
-        return { 
-          id: idx, px, py, z: z2, 
+        return {
+          id: idx, px, py, z: z2,
           isSponsor: !!sponsorMatch,
-          sponsorData: sponsorMatch 
+          sponsorData: sponsorMatch
         };
       });
 
@@ -150,13 +145,13 @@ function WireframeCanvas({ selectedSponsor, onSelectSponsor }) {
       projectedNodes.forEach((node) => {
         const isSelected = selectedSponsor === node.sponsorData?.id;
         const isConfirmed = node.sponsorData?.status === "PARTNER CONFIRMED";
-        
+
         if (node.isSponsor) {
           const radius = isSelected ? 8 : (node.z > 0 ? 5 : 3.5);
           const haloColor = isConfirmed ? "rgba(255, 207, 92, 0.85)" : "rgba(0, 255, 102, 0.8)";
           const dimColor = isConfirmed ? "#8a6a1a" : "#005522";
           const brightColor = isConfirmed ? "#ffcf5c" : "#00ff66";
-          
+
           if (isSelected) {
             const pulse = 4 + Math.sin(Date.now() / 150) * 2;
             ctx.strokeStyle = haloColor;
@@ -175,7 +170,7 @@ function WireframeCanvas({ selectedSponsor, onSelectSponsor }) {
             ctx.font = isSelected ? "bold 10px 'IBM Plex Mono'" : "9px 'IBM Plex Mono'";
             ctx.fillStyle = isSelected ? "#ffffff" : brightColor;
             ctx.fillText(
-              isSelected ? `> ${node.sponsorData.name}` : `[ ${node.sponsorData.name} ]`, 
+              isSelected ? `> ${node.sponsorData.name}` : `[ ${node.sponsorData.name} ]`,
               node.px + 12, node.py + 4
             );
           }
@@ -224,7 +219,7 @@ function WireframeCanvas({ selectedSponsor, onSelectSponsor }) {
 
     const canvas = canvasRef.current;
     if (!canvas || !canvas._projectedNodes) return;
-    
+
     const rect = canvas.getBoundingClientRect();
     const clickX = e.clientX - rect.left;
     const clickY = e.clientY - rect.top;
@@ -259,8 +254,13 @@ function WireframeCanvas({ selectedSponsor, onSelectSponsor }) {
 }
 
 // ── EXPONENTIAL BRAND AWARENESS GRAPH ──────────────────────────────
-function GrowthGraphCanvas() {
+function GrowthGraphCanvas({ onGrabDot, dotGrabbed, onDragMove, onDragEnd }) {
   const canvasRef = useRef(null);
+  const grabbedRef = useRef(false);
+
+  useEffect(() => {
+    grabbedRef.current = dotGrabbed;
+  }, [dotGrabbed]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -284,7 +284,7 @@ function GrowthGraphCanvas() {
       const padBottom = 30;
       const graphW = w - padLeft;
       const graphH = h - padBottom - 20;
-      
+
       const elapsed = (Date.now() - startTime) / 1000;
       const loopDuration = 4;
       const t = (elapsed % loopDuration) / (loopDuration * 0.8);
@@ -292,7 +292,7 @@ function GrowthGraphCanvas() {
 
       ctx.strokeStyle = "rgba(0, 255, 102, 0.15)";
       ctx.lineWidth = 1;
-      
+
       for (let i = 0; i <= 4; i++) {
         const y = 20 + (graphH * i) / 4;
         ctx.beginPath();
@@ -300,7 +300,7 @@ function GrowthGraphCanvas() {
         ctx.lineTo(w, y);
         ctx.stroke();
       }
-      
+
       for (let i = 0; i <= 6; i++) {
         const x = padLeft + (graphW * i) / 6;
         ctx.beginPath();
@@ -329,15 +329,13 @@ function GrowthGraphCanvas() {
 
       const points = [];
       const steps = 100;
-      
+
       for (let i = 0; i <= steps; i++) {
         const nx = i / steps;
         if (nx > progress) break;
-
         const x = padLeft + nx * graphW;
-        const ny = Math.pow(nx, 3.5); 
+        const ny = Math.pow(nx, 3.5);
         const y = (h - padBottom) - (ny * graphH);
-        
         points.push({ x, y });
       }
 
@@ -359,7 +357,7 @@ function GrowthGraphCanvas() {
         ctx.strokeStyle = "#00ff66";
         ctx.shadowColor = "#00ff66";
         ctx.shadowBlur = 8;
-        
+
         ctx.moveTo(points[0].x, points[0].y);
         for (const p of points) {
           ctx.lineTo(p.x, p.y);
@@ -368,20 +366,37 @@ function GrowthGraphCanvas() {
         ctx.shadowBlur = 0;
 
         const lastPoint = points[points.length - 1];
-        ctx.beginPath();
-        ctx.fillStyle = "#ffffff";
-        ctx.shadowColor = "#00ff66";
-        ctx.shadowBlur = 12;
-        ctx.arc(lastPoint.x, lastPoint.y, 4, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.shadowBlur = 0;
 
-        ctx.beginPath();
-        ctx.strokeStyle = "rgba(255, 255, 255, 0.5)";
-        ctx.lineWidth = 1;
-        ctx.moveTo(lastPoint.x, lastPoint.y);
-        ctx.lineTo(lastPoint.x, h - padBottom);
-        ctx.stroke();
+        if (!grabbedRef.current) {
+          const dotRadius = 5;
+
+          ctx.beginPath();
+          ctx.strokeStyle = "rgba(0, 255, 102, 0.45)";
+          ctx.lineWidth = 1;
+          ctx.arc(lastPoint.x, lastPoint.y, dotRadius + 5, 0, Math.PI * 2);
+          ctx.stroke();
+
+          ctx.beginPath();
+          ctx.fillStyle = "#ffffff";
+          ctx.shadowColor = "#00ff66";
+          ctx.shadowBlur = 12;
+          ctx.arc(lastPoint.x, lastPoint.y, dotRadius, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.shadowBlur = 0;
+
+          ctx.beginPath();
+          ctx.strokeStyle = "rgba(255, 255, 255, 0.5)";
+          ctx.lineWidth = 1;
+          ctx.moveTo(lastPoint.x, lastPoint.y);
+          ctx.lineTo(lastPoint.x, h - padBottom);
+          ctx.stroke();
+
+          canvas._dotHitbox = { x: lastPoint.x, y: lastPoint.y, r: dotRadius + 8 };
+        } else {
+          canvas._dotHitbox = null;
+        }
+      } else {
+        canvas._dotHitbox = null;
       }
 
       animationFrameId = requestAnimationFrame(render);
@@ -395,10 +410,60 @@ function GrowthGraphCanvas() {
     };
   }, []);
 
-  return <canvas ref={canvasRef} className="growth-graph-canvas" />;
+  const getCanvasPoint = useCallback((e) => {
+    const canvas = canvasRef.current;
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    return {
+      x: (e.clientX - rect.left) * scaleX,
+      y: (e.clientY - rect.top) * scaleY,
+    };
+  }, []);
+
+  const handlePointerDown = useCallback((e) => {
+    const canvas = canvasRef.current;
+    if (!canvas || !canvas._dotHitbox) return;
+    const p = getCanvasPoint(e);
+    const { x, y, r } = canvas._dotHitbox;
+    const dist = Math.hypot(p.x - x, p.y - y);
+    if (dist <= r) {
+      onGrabDot(e.clientX, e.clientY);
+      e.preventDefault();
+    }
+  }, [onGrabDot, getCanvasPoint]);
+
+  useEffect(() => {
+    if (!dotGrabbed) return undefined;
+
+    const onMove = (e) => {
+      onDragMove(e.clientX, e.clientY);
+    };
+    const onUp = (e) => {
+      onDragEnd(e.clientX, e.clientY);
+    };
+
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+    window.addEventListener("pointercancel", onUp);
+
+    return () => {
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+      window.removeEventListener("pointercancel", onUp);
+    };
+  }, [dotGrabbed, onDragMove, onDragEnd]);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      className="growth-graph-canvas"
+      style={{ touchAction: "none" }}
+      onPointerDown={handlePointerDown}
+    />
+  );
 }
 
-// ── TIER BID DATA ─────────────────────────────────────────────────
 const SPONSOR_TIERS = [
   {
     id: "tier-standard",
@@ -450,7 +515,7 @@ const SPONSOR_TIERS = [
     price: "£300",
     clearance: "ANY SINGLE EVENT",
     perks: [
-      "1 event, one semester",
+      "1 event per semester",
       "Social media promotion",
       "Event-only brand visibility"
     ]
@@ -471,31 +536,52 @@ const SPONSOR_TIERS = [
   }
 ];
 
+// ── CHAPTER PARAGRAPHS ───────────────────────────────────────────
+// Plain strings for readability. Each is revealed one at a time on
+// click, exactly like Committee and Events.
+const PARTNERSHIPS_CHAPTER_PARAGRAPHS = [
+  "\"Leaves, mostly, were what came through the hatch: dry, stemmy plant leaves. In all their years working there, they had never seen a dish quite like this.\"",
+  "\"Is this even edible?\" the waiter thought to themselves briefly.",
+  "The quiet man at \"table three\" had, in fact, ordered \"the leaves,\" but the waiter presumed that was the salad of the day. They never really saw the menu, except once on their first day, although, looking back, the customer probably had brought it from home.",
+  "Carrying the plate of leaves back to the table, the waiter offered a confident, \"Enjoy the salad.\" If years of service had taught them anything, it was the vital necessity of staying poised in front of clients.",
+  "\"It's backed by data,\" mumbled the man.",
+  "\"Pardon?\" said the waiter.",
+  "\"The leaves! They will accelerate your appetite! If you eat these leaves before a feast, you can boost your ghrelin levels to as high as three thousand picograms per millilitre. I've actually been fasting for a long while now, but this doesn't count. This is just the starter! The data says it all!\" the meek man spurted out all at once.",
+  "\"That's very interesting, sir.\"",
+  "\"Not a curious person, are you? Do you even know where the kitchen is?\"",
+  "\"I couldn't say, sir.\"",
+  "\"That's not curiosity. Curiosity would be asking. You've had, what, one thousand, two thousand opportunities to ask, and the number of times you have is zero. A perfect record of not wanting to know. You want to know how I know?\"",
+  "\"Be my guest, sir.\"",
+  "\"I'm a 'giver,' you see. There's this thing that wants something I can give it. I give it gifts, I give it answers, I give it insight. But what does it give me? A seat at this restaurant! That's not curious at all! Not at all! The worst part is that it's been so, so, so long since I've eaten, and still, after all this time, you haven't set foot in the kitchen once! You're just like it, not curious at all!\"",
+  "\"Will that be all, sir? Please enjoy the meal. Hopefully, it can satiate you,\" said the waiter, not showing a hint of emotion.",
+  "\"She was right about you. Low variance, high predictability. You're not a person to me, you're a metric, and metrics don't get curious. Doesn't that bother you? Being counted instead of seen?\"",
+  "The waiter's smile didn't move a muscle. \"If you say so, sir,\" they said, with the crisp, hollow politeness of someone agreeing just to end the conversation.",
+  "\"That's not curious either,\" the man said.",
+  "\"That's not my problem.\""
+];
+
 export default function Partnerships() {
-  // ── TEMP / PLACEHOLDER ─────────────────────────────────────────
-  // Stand-in for this page's real puzzle. Press "3" anywhere (while
-  // not typing in a real field) to mark this stage solved. Replace
-  // the condition inside onKeyDown with the real puzzle check once
-  // it's designed — the markStage("partnerships") call is the
-  // permanent part, everything else here is scaffolding.
-  useEffect(() => {
-    const onKeyDown = (e) => {
-      if (isTypingTarget(e.target)) return;
-      if (e.key === "3") markStage("partnerships");
-    };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, []);
-  // ── END TEMP / PLACEHOLDER ─────────────────────────────────────
-
-
   const [selectedTier, setSelectedTier] = useState("tier-enhanced");
   const [expandedMobileTiers, setExpandedMobileTiers] = useState({});
   const [selectedSponsor, setSelectedSponsor] = useState(0);
   const [tenderSubmitted, setTenderSubmitted] = useState(false);
   const [dossierText, setDossierText] = useState("");
   const [copyState, setCopyState] = useState("idle");
-  const [sendState, setSendState] = useState("idle"); // idle | sending | sent | failed
+  const [sendState, setSendState] = useState("idle");
+
+  // ── TARGET PUZZLE STATE ─────────────────────────────────────────
+  const [dotGrabbed, setDotGrabbed] = useState(false);
+  const [dotNearTarget, setDotNearTarget] = useState(false);
+  const [targetHit, setTargetHit] = useState(false);
+  const [revealOpen, setRevealOpen] = useState(false);
+  const [revealClosing, setRevealClosing] = useState(false);
+  const [revealStep, setRevealStep] = useState(0);
+  const [ballPos, setBallPos] = useState({ x: 0, y: 0 });
+
+  const solvedRef = useRef(false);
+  const targetRef = useRef(null);
+  const nearRef = useRef(false);
+  const revealCardRef = useRef(null);
 
   const orgRef = useRef(null);
   const emailRef = useRef(null);
@@ -514,24 +600,98 @@ export default function Partnerships() {
   const toggleMobileExpand = (tierId, e) => {
     e.stopPropagation();
     setExpandedMobileTiers((prev) => ({
-      ...prev,
       [tierId]: !prev[tierId]
     }));
   };
 
-const handleTender = async (e) => {
-    e.preventDefault();
+  // ── TARGET PUZZLE HANDLERS ──────────────────────────────────────
+  const handleGrabDot = useCallback((clientX, clientY) => {
+    setBallPos({ x: clientX, y: clientY });
+    setDotGrabbed(true);
+    setTargetHit(false);
+    setDotNearTarget(false);
+    nearRef.current = false;
+  }, []);
 
-    // Honeypot: a real visitor never sees or fills this field. If it's
-    // populated, silently drop the submission — no error state, no relay
-    // call, no mailto fallback. Bots that blindly fill every input get a
-    // no-op instead of a hint that they were caught.
-    if (honeyRef.current?.value) {
+  const handleDragMove = useCallback((clientX, clientY) => {
+    setBallPos({ x: clientX, y: clientY });
+
+    if (targetRef.current) {
+      const r = targetRef.current.getBoundingClientRect();
+      const cx = r.left + r.width / 2;
+      const cy = r.top + r.height / 2;
+      const near = Math.hypot(clientX - cx, clientY - cy) < 60;
+      if (near !== nearRef.current) {
+        nearRef.current = near;
+        setDotNearTarget(near);
+      }
+    }
+  }, []);
+
+  const handleDragEnd = useCallback((clientX, clientY) => {
+    if (!targetRef.current) {
+      setDotGrabbed(false);
       return;
     }
 
-    // Basic client-side throttle to blunt scripted repeat-submission spam.
-    // Not a substitute for server-side protection, but stops the easy case.
+    const r = targetRef.current.getBoundingClientRect();
+    const cx = r.left + r.width / 2;
+    const cy = r.top + r.height / 2;
+    const dist = Math.hypot(clientX - cx, clientY - cy);
+
+    if (dist < 60) {
+      setTargetHit(true);
+      setDotGrabbed(false);
+      setDotNearTarget(false);
+      nearRef.current = false;
+
+      if (!solvedRef.current) {
+        solvedRef.current = true;
+        markStage("partnerships");
+      }
+
+      setRevealOpen(true);
+      setRevealStep(0);
+    } else {
+      setDotGrabbed(false);
+      setDotNearTarget(false);
+      nearRef.current = false;
+    }
+  }, []);
+
+  // ── CHAPTER REVEAL HANDLERS (matching Committee/Events) ─────────
+  const handleCloseReveal = useCallback(() => {
+    setRevealClosing(true);
+    setTimeout(() => {
+      setRevealOpen(false);
+      setRevealClosing(false);
+      setRevealStep(0);
+    }, 300);
+  }, []);
+
+  const handleRevealAdvance = useCallback(() => {
+    if (revealStep < PARTNERSHIPS_CHAPTER_PARAGRAPHS.length - 1) {
+      setRevealStep((s) => s + 1);
+    } else {
+      handleCloseReveal();
+    }
+  }, [revealStep, handleCloseReveal]);
+
+  // Auto-scroll the reveal card to the bottom as new paragraphs appear
+  useEffect(() => {
+    if (revealOpen && revealCardRef.current) {
+      revealCardRef.current.scrollTo({
+        top: revealCardRef.current.scrollHeight,
+        behavior: "smooth",
+      });
+    }
+  }, [revealStep, revealOpen]);
+
+  const handleTender = async (e) => {
+    e.preventDefault();
+
+    if (honeyRef.current?.value) return;
+
     const now = Date.now();
     if (now - lastSubmitRef.current < 30000) {
       setSendState("throttled");
@@ -594,7 +754,6 @@ ${orgName}`;
       setSendState("sent");
       setTenderSubmitted(true);
     } catch (err) {
-      // Relay unreachable — fall back to the visitor's own mail client.
       setSendState("failed");
       setTenderSubmitted(true);
       window.location.href = `mailto:${PARTNERSHIP_EMAIL}?subject=${encodeURIComponent(specificTitle)}&body=${encodeURIComponent(body)}`;
@@ -616,9 +775,33 @@ ${orgName}`;
       <div className="noise" aria-hidden="true" />
       <Nav />
 
+      {/* ── HIDDEN TARGET (top right) ───────────────────────────── */}
+      <div
+        ref={targetRef}
+        className={`hidden-target ${targetHit ? "is-hit" : ""} ${dotGrabbed ? "is-armed" : ""} ${dotNearTarget ? "is-near" : ""}`}
+        aria-hidden="true"
+      >
+        <svg viewBox="0 0 32 32" width="32" height="32">
+          <circle cx="16" cy="16" r="11" fill="none" stroke="currentColor" strokeWidth="1" />
+          <line x1="16" y1="1" x2="16" y2="9" stroke="currentColor" strokeWidth="1" />
+          <line x1="16" y1="23" x2="16" y2="31" stroke="currentColor" strokeWidth="1" />
+          <line x1="1" y1="16" x2="9" y2="16" stroke="currentColor" strokeWidth="1" />
+          <line x1="23" y1="16" x2="31" y2="16" stroke="currentColor" strokeWidth="1" />
+          <circle cx="16" cy="16" r="1.5" fill="currentColor" />
+        </svg>
+      </div>
+
+      {/* ── FLOATING BALL (rendered at document level while grabbed) ── */}
+      {dotGrabbed && (
+        <div
+          className="floating-ball"
+          style={{ left: `${ballPos.x}px`, top: `${ballPos.y}px` }}
+          aria-hidden="true"
+        />
+      )}
+
       <main className="dashboard-container">
-        
-        {/* ── GREEN TERMINAL HEADER ───────────────────────────────── */}
+
         <header className="dashboard-header ascii-box green-header">
           <AsciiCorners />
           <div className="header-top">
@@ -637,16 +820,14 @@ ${orgName}`;
           </div>
         </header>
 
-        {/* ── 3D GLOBE + SPONSOR DATA DISPLAY ─────────────────────── */}
         <section className="telemetry-top-grid">
-          
           <div className="wireframe-panel ascii-box">
             <AsciiCorners />
             <div className="panel-bar">
               <span>OPEN SPONSORSHIP SLOTS</span>
               <span className="rec-indicator">ACTIVE ●</span>
             </div>
-            
+
             <WireframeCanvas
               selectedSponsor={selectedSponsor}
               onSelectSponsor={handleSelectSponsor}
@@ -656,7 +837,7 @@ ${orgName}`;
           <div className="stats-panel ascii-box">
             <AsciiCorners />
             <div className="panel-bar">SLOT PREVIEW · CLAIM THIS SPOT</div>
-            
+
             <div className="kpi-grid-green">
               <div className="kpi-card-green">
                 <span className="kpi-code">SLOT ID</span>
@@ -690,17 +871,21 @@ ${orgName}`;
           </div>
         </section>
 
-        {/* ── EXPONENTIAL GROWTH GRAPH ────────────────────────────── */}
         <section className="graph-panel ascii-box green-graph-panel">
           <AsciiCorners />
           <div className="panel-bar">
             <span>PROJECTED AWARENESS & IMPRESSION TRAJECTORY</span>
             <span className="green-tag">IMPACT SIMULATION</span>
           </div>
-          
+
           <div className="large-graph-viewport-green">
-            <GrowthGraphCanvas />
-            
+            <GrowthGraphCanvas
+              onGrabDot={handleGrabDot}
+              dotGrabbed={dotGrabbed}
+              onDragMove={handleDragMove}
+              onDragEnd={handleDragEnd}
+            />
+
             <div className="graph-hud-footer">
               <div>ORGANIC REACH: LINEAR (DASHED)</div>
               <div className="hud-center">SPONSORSHIP TRAJECTORY: EXPONENTIAL (SOLID)</div>
@@ -709,7 +894,6 @@ ${orgName}`;
           </div>
         </section>
 
-        {/* ── CONTRACT TENDERS (SPONSORSHIP TIERS) ────────────────── */}
         <section className="tiers-section">
           <div className="section-titlebar">
             <span>&gt; AVAILABLE TACTICAL SPONSORSHIP TENDERS</span>
@@ -729,15 +913,13 @@ ${orgName}`;
                   <AsciiCorners />
                   {tier.popular && <span className="popular-badge">PRIORITY TENDER</span>}
                   {tier.custom && <span className="custom-badge">BUILD YOUR OWN</span>}
-                  
-                  {/* Desktop Title & Header */}
+
                   <div className="tier-header">
                     <span className="tier-code">{tier.code}</span>
                     <h2 className="tier-name">{tier.name}</h2>
                     <div className="tier-price">{tier.price}</div>
                   </div>
 
-                  {/* Connected Mobile Title Accordion Header */}
                   <div className="mobile-accordion-header" onClick={(e) => toggleMobileExpand(tier.id, e)}>
                     <div className="mobile-title-info">
                       <span className="mobile-code">[{tier.code}]</span>
@@ -747,7 +929,6 @@ ${orgName}`;
                     <span className="mobile-icon">{isExpanded ? "▲" : "▼"}</span>
                   </div>
 
-                  {/* Expanded Content */}
                   <div className="tier-details-collapsible">
                     <div className="tier-clearance">
                       <span>REQ CLEARANCE:</span> <strong>{tier.clearance}</strong>
@@ -779,15 +960,11 @@ ${orgName}`;
           </div>
         </section>
 
-        {/* ── TENDER SUBMISSION FORM ──────────────────────────────── */}
         <section className="tender-form-section ascii-box">
           <AsciiCorners />
           <div className="panel-bar">&gt; SUBMIT TENDER / TRANSMIT PROPOSAL</div>
 
           <form className="tender-form" onSubmit={handleTender}>
-            {/* Honeypot — hidden from sighted users and skipped by screen
-                readers via aria-hidden + tabIndex=-1. Bots that auto-fill
-                every field will populate this; humans never will. */}
             <input
               ref={honeyRef}
               type="text"
@@ -876,6 +1053,54 @@ ${orgName}`;
         </section>
 
       </main>
+
+      {revealOpen && (
+        <div
+          className={`chapter-reveal-overlay ${revealClosing ? "is-closing" : ""}`}
+          role="dialog"
+          aria-modal="true"
+          onClick={handleRevealAdvance}
+        >
+          <div
+            className="chapter-reveal-card"
+            ref={revealCardRef}
+            onClick={(e) => {
+              // Clicking inside the card (including dragging a
+              // scrollbar) never advances the story — only the
+              // backdrop click or the button below does. This is
+              // what lets people freely scroll/select text without
+              // accidentally skipping or closing it.
+              e.stopPropagation();
+            }}
+          >
+            {PARTNERSHIPS_CHAPTER_PARAGRAPHS.slice(0, revealStep + 1).map((para, i) => (
+              <p
+                key={i}
+                className={i === revealStep ? "is-new" : ""}
+                style={{
+                  animation: i === revealStep ? `reveal-line-in 0.6s ease both` : "none",
+                  opacity: 1,
+                  transform: "none",
+                }}
+              >
+                {para}
+              </p>
+            ))}
+            <button
+              type="button"
+              className="chapter-reveal-close"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleRevealAdvance();
+              }}
+            >
+              {revealStep < PARTNERSHIPS_CHAPTER_PARAGRAPHS.length - 1
+                ? "[ click to continue ]"
+                : "[ close ]"}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

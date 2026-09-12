@@ -176,7 +176,7 @@
 }
 .hud-center { color: var(--accent); font-weight: 600; }
 
-/* ── Tier Pricing Cards (Centered Desktop Flex Grid & Uniform Sizing) ─ */
+/* ── Tier Pricing Cards ─────────────────────────────────────────── */
 .section-titlebar { font-size: 0.75rem; color: var(--accent); margin-bottom: 1rem; border-bottom: 1px dashed var(--line); padding-bottom: 0.4rem; letter-spacing: 0.08em; font-weight: 600; }
 
 .tiers-grid {
@@ -242,17 +242,17 @@
 .tier-perks li { display: flex; gap: 0.4rem; }
 .tier-perks .bullet { color: var(--accent); }
 
-.tier-btn { 
-  margin-top: auto; 
-  background: none; 
-  border: 1px solid var(--line); 
-  color: var(--fg-dim); 
-  font-family: inherit; 
-  font-size: 0.65rem; 
-  padding: 0.5rem; 
-  cursor: pointer; 
-  transition: all 0.2s ease; 
-  font-weight: 600; 
+.tier-btn {
+  margin-top: auto;
+  background: none;
+  border: 1px solid var(--line);
+  color: var(--fg-dim);
+  font-family: inherit;
+  font-size: 0.65rem;
+  padding: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: 600;
   width: 100%;
 }
 .tier-btn:hover, .tier-btn.active { background: var(--accent); color: #000; border-color: var(--accent); }
@@ -306,7 +306,178 @@
 }
 .copy-btn:hover { background: var(--accent); color: #000; border-color: var(--accent); }
 
-/* ── RESPONSIVE & MOBILE ACCORDION (CONNECTED ROWS) ─────────────── */
+/* ── Floating Ball (dragged dot, rendered at document level) ──────
+   Takes over rendering from the canvas the moment the dot is grabbed,
+   so it can escape the graph panel and travel anywhere on screen. */
+.floating-ball {
+  position: fixed;
+  z-index: 9999;
+  width: 18px;
+  height: 18px;
+  margin: -9px 0 0 -9px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow:
+    0 0 10px #00ff66,
+    0 0 22px #00ff66,
+    0 0 0 6px rgba(0, 255, 102, 0.18);
+  pointer-events: none;
+  will-change: left, top;
+}
+
+/* ── Hidden Target ────────────────────────────────────────────────
+   Absolute on desktop so it scrolls with the page content.
+   Fixed inside the mobile media query below so it stays pinned
+   to the viewport corner regardless of scroll position. */
+.hidden-target {
+  position: absolute;
+  top: 4.5rem;
+  right: 1.25rem;
+  z-index: 40;
+  width: 32px;
+  height: 32px;
+  color: var(--accent);
+  opacity: 0.1;
+  pointer-events: none;
+  user-select: none;
+}
+
+.hidden-target svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+@media (max-width: 48rem) {
+  .hidden-target {
+    position: fixed;
+    top: 4rem;
+    right: 0.75rem;
+    width: 26px;
+    height: 26px;
+  }
+}
+
+/* ── Chapter reveal ──────────────────────────────────────────────
+   Deliberate tonal break from the terminal aesthetic, same idea as
+   Committee's reveal: plain serif, dark, quiet. The card itself is
+   always the scroll container, capped to 80dvh, at every breakpoint.
+   Matches Committee/Events exactly. */
+.procurement-page .chapter-reveal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: radial-gradient(ellipse at 50% 45%, rgba(4, 10, 5, 0.97) 0%, rgba(1, 3, 1, 0.98) 72%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(1.25rem, 5vh, 3.5rem) clamp(1.25rem, 6vw, 3rem);
+  animation: reveal-overlay-in 0.7s ease both;
+}
+
+@keyframes reveal-overlay-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.procurement-page .chapter-reveal-card {
+  width: 100%;
+  max-width: 36rem;
+  max-height: 80vh;
+  max-height: 80dvh;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* old Edge/IE */
+  color: #ece7dc;
+  font-family: Georgia, "Iowan Old Style", serif;
+  font-size: clamp(0.72rem, 1.85vh, 1.05rem);
+  line-height: 1.65;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  animation: reveal-card-in 0.8s cubic-bezier(0.16, 0.8, 0.3, 1) 0.15s both;
+  padding-right: 0.5rem;
+}
+
+.procurement-page .chapter-reveal-card::-webkit-scrollbar {
+  display: none; /* Chrome/Safari/Edge */
+}
+
+@keyframes reveal-card-in {
+  from { opacity: 0; transform: translateY(10px) scale(0.985); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.procurement-page .chapter-reveal-card p {
+  margin: 0 0 1em;
+  opacity: 1;
+  transform: none;
+}
+
+@keyframes reveal-line-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.procurement-page .chapter-reveal-card p:last-of-type {
+  margin-bottom: 0;
+}
+
+.procurement-page .chapter-reveal-card p:first-of-type::first-letter {
+  color: var(--accent);
+  font-size: 1.5em;
+  font-weight: 600;
+  line-height: 1;
+  padding-right: 0.02em;
+}
+
+.procurement-page .chapter-reveal-close {
+  align-self: center;
+  margin-top: clamp(0.9rem, 3vh, 1.6rem);
+  background: none;
+  border: none;
+  color: var(--fg-dim);
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  cursor: pointer;
+  padding: 0.4rem 0.8rem;
+  opacity: 1;
+  transition: color 0.2s ease, opacity 0.2s ease;
+}
+
+.procurement-page .chapter-reveal-close:hover {
+  color: var(--accent);
+}
+
+/* Small-viewport type tweak only — does NOT touch overflow or max-height,
+   so the card remains the scroll container at every breakpoint. */
+@media (max-height: 34rem), (max-width: 26rem) {
+  .procurement-page .chapter-reveal-card {
+    font-size: clamp(0.65rem, 2.3vh, 0.85rem);
+    line-height: 1.5;
+  }
+  .procurement-page .chapter-reveal-card p {
+    margin-bottom: 0.7em;
+  }
+}
+
+/* ── Fade out on close ─────────────────────────────────────────── */
+@keyframes reveal-overlay-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+.procurement-page .chapter-reveal-overlay.is-closing {
+  animation: reveal-overlay-out 0.3s ease both;
+}
+
+/* ── RESPONSIVE & MOBILE ACCORDION ─────────────────────────────── */
 @media (max-width: 58rem) {
   .telemetry-top-grid {
     grid-template-columns: 1fr;
@@ -324,14 +495,13 @@
     padding-bottom: 2px;
   }
 
-  /* Base row setup */
   .tiers-grid .tier-card {
     flex: 1 1 100%;
     max-width: 100%;
     padding: 0;
     margin-top: 0;
     border: 1px solid var(--line);
-    border-bottom: none; /* Strip bottom border to prevent stacking */
+    border-bottom: none;
     box-shadow: none;
     position: relative;
     z-index: 1;
@@ -341,17 +511,13 @@
     border-bottom: 1px solid var(--line);
   }
 
-  /* ── SPECIAL BORDER OVERRIDES ON MOBILE ────────────────────── */
-
-  /* Priority / Popular Tier (Gold/Yellow Border) */
   .tiers-grid .tier-card.is-popular {
     border-color: var(--popular) !important;
     border-bottom: 1px solid var(--popular) !important;
-    z-index: 3; /* Pull above adjacent borders so the color shows fully */
-    margin-bottom: -1px; /* Overlap the next row's top border */
+    z-index: 3;
+    margin-bottom: -1px;
   }
 
-  /* Custom Tier (Accent Green Border) */
   .tiers-grid .tier-card.is-custom {
     border: 1px dashed var(--accent) !important;
     border-bottom: 1px dashed var(--accent) !important;
@@ -359,7 +525,6 @@
     margin-bottom: -1px;
   }
 
-  /* Selected Tier Highlight */
   .tiers-grid .tier-card.is-selected:not(.is-popular):not(.is-custom) {
     border-color: var(--accent) !important;
     border-bottom: 1px solid var(--accent) !important;
@@ -367,15 +532,13 @@
     margin-bottom: -1px;
   }
 
-  /* Decorative cleanup */
-  .popular-badge, 
+  .popular-badge,
   .custom-badge,
   .tier-header,
   .tiers-grid .ascii-corner {
     display: none;
   }
 
-  /* Mobile Title Bar */
   .mobile-accordion-header {
     display: flex;
     justify-content: space-between;
@@ -388,7 +551,6 @@
     border: none;
   }
 
-  /* Highlight header background for special tiers */
   .tier-card.is-popular .mobile-accordion-header {
     background: rgba(255, 207, 92, 0.08);
   }
@@ -432,7 +594,6 @@
     color: var(--popular);
   }
 
-  /* Expanded Body */
   .tier-details-collapsible {
     display: none;
     padding: 1rem;
@@ -448,6 +609,7 @@
     background: var(--panel);
   }
 }
+
 .procurement-page.matrix-theme::-webkit-scrollbar {
   display: none;
 }
@@ -462,7 +624,23 @@ html, body {
   scrollbar-width: none;
 }
 
-html::-webkit-scrollbar, 
+html::-webkit-scrollbar,
 body::-webkit-scrollbar {
   display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hidden-target,
+  .floating-ball {
+    transition: none !important;
+  }
+  .procurement-page .chapter-reveal-overlay,
+  .procurement-page .chapter-reveal-card,
+  .procurement-page .chapter-reveal-card p,
+  .procurement-page .chapter-reveal-close,
+  .procurement-page .chapter-reveal-overlay.is-closing {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
 }
