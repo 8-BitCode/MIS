@@ -4,7 +4,7 @@ import "./Home.css";
 import Nav from "./Nav";
 import DecryptText from "./DecryptText";
 import { useEvidenceSFX } from "./useEvidenceSFX";
-import { useClearance, markStage, isTypingTarget, isAllComplete, STAGES } from "./clearance";
+import { useClearance, isAllComplete, STAGES } from "./clearance";
 import Ending from "./Misc";
 
 const CIPHER_ANSWERS = {
@@ -702,7 +702,7 @@ function ClearanceReveal({ onDismiss }) {
 
             {error && (
               <p className="cipher-error">
-                INCORRECT SEQUENCE. FILE REMAINS SEALED.
+                Its not your time yet
               </p>
             )}
           </div>
@@ -723,17 +723,6 @@ export default function Home() {
   const stages = useClearance();
   const [revealDismissed, setRevealDismissed] = useState(false);
   const [padlockUnlocked, setPadlockUnlocked] = useState(false);
-
-  useEffect(() => {
-    const KEY_TO_STAGE = { a: "committee", b: "events", c: "partnerships", d: "contact" };
-    const onKeyDown = (e) => {
-      if (isTypingTarget(e.target)) return;
-      const stageId = KEY_TO_STAGE[e.key.toLowerCase()];
-      if (stageId) markStage(stageId);
-    };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, []);
 
   const [briefingRef, briefingVisible] = useScrollReveal();
   const [statsRef, statsVisible] = useScrollReveal();
