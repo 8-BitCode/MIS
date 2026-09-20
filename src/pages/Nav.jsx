@@ -16,6 +16,14 @@ export const SITE_LINKS = [
   { to: "/contact", label: "CONTACT", code: "04" },
 ];
 
+// The blog is its own site on its own domain, so it's a plain <a>, not a
+// router link. It's kept out of SITE_LINKS on purpose: those are the pages
+// of this site (boxed together in the bar); this one sits outside the box.
+export const BLOG_LINK = {
+  href: "https://blog.manchesterintelligencesociety.com",
+  label: "BLOG",
+};
+
 export default function Nav() {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -50,20 +58,32 @@ export default function Nav() {
         </NavLink>
 
         <nav className="site-nav-links" aria-label="Primary">
-          {SITE_LINKS.map((link) => (
-            <NavLink
-              key={link.to}
-              to={link.to}
-              end={link.end}
-              className={({ isActive }) =>
-                `site-nav-link ${isActive ? "is-active" : ""}`
-              }
-              onClick={() => playDossierOpen()}
-            >
-              <span className="link-code">{link.code}</span>
-              <span className="link-label">{link.label}</span>
-            </NavLink>
-          ))}
+          <div className="site-nav-group">
+            {SITE_LINKS.map((link) => (
+              <NavLink
+                key={link.to}
+                to={link.to}
+                end={link.end}
+                className={({ isActive }) =>
+                  `site-nav-link ${isActive ? "is-active" : ""}`
+                }
+                onClick={() => playDossierOpen()}
+              >
+                <span className="link-code">{link.code}</span>
+                <span className="link-label">{link.label}</span>
+              </NavLink>
+            ))}
+          </div>
+
+          <a
+            className="site-nav-link site-nav-link--external"
+            href={BLOG_LINK.href}
+            title="Reports, analysis and field notes — opens the Dispatches blog"
+            onClick={() => playDossierOpen()}
+          >
+            <span className="link-code" aria-hidden="true">↗</span>
+            <span className="link-label">{BLOG_LINK.label}</span>
+          </a>
         </nav>
 
         <div className="site-nav-status" aria-hidden="true">
@@ -99,6 +119,17 @@ export default function Nav() {
               </NavLink>
             </li>
           ))}
+          <li className="drawer-external">
+            <a
+              className="drawer-link drawer-link--external"
+              href={BLOG_LINK.href}
+              onClick={() => playDossierOpen()}
+            >
+              <span className="link-code" aria-hidden="true">↗</span>
+              <span className="link-label">{BLOG_LINK.label}</span>
+              <span className="link-arrow">&gt;</span>
+            </a>
+          </li>
         </ul>
       </div>
     </header>

@@ -14,6 +14,8 @@
   --fg-dim: #5e6d67;
   --accent: #3ddc84;
   --flag: #ff5a4e;
+  --blog: #ff4fb0; /* the blog's own accent, so it reads as a different site */
+  --blog-dim: #5c1f47;
 
   position: sticky;
   top: 0;
@@ -82,8 +84,17 @@
 .site-nav-links {
   display: flex;
   align-items: center;
-  gap: 0.15rem;
+  gap: 0.75rem;
   flex: 1;
+}
+
+/* The site's own pages sit together in a thin box... */
+.site-nav-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+  padding: 0.18rem;
+  border: 1px solid var(--line);
 }
 
 .site-nav-link {
@@ -144,6 +155,33 @@
 
 .site-nav-link.is-active::after {
   display: none;
+}
+
+/* ...and the blog stands outside it, in its own colour, marked as external. */
+.site-nav-link--external {
+  color: var(--blog);
+  border: 1px dashed var(--blog-dim);
+}
+
+.site-nav-link--external .link-code {
+  color: var(--blog);
+  font-size: 0.7rem;
+  transition: transform 0.2s ease;
+}
+
+.site-nav-link--external:hover {
+  color: var(--blog);
+  border-color: var(--blog);
+  background: rgba(255, 79, 176, 0.08);
+}
+
+.site-nav-link--external:hover .link-code {
+  color: var(--blog);
+  transform: translate(1px, -1px);
+}
+
+.site-nav-link--external::after {
+  background: var(--blog);
 }
 
 /* ── Status readout ─────────────────────────────────────────────── */
@@ -223,6 +261,27 @@
 
 .drawer-link .link-label {
   flex: 1;
+}
+
+/* blog link: set apart from the site's own pages */
+.drawer-external {
+  margin-top: 0.6rem;
+}
+
+.drawer-link--external {
+  color: var(--blog);
+  border: 1px dashed var(--blog-dim);
+  padding: 0.6rem 0.7rem;
+}
+
+.drawer-link--external .link-code,
+.drawer-link--external .link-arrow {
+  color: var(--blog);
+}
+
+.drawer-link--external:hover {
+  color: var(--blog);
+  border-color: var(--blog);
 }
 
 .drawer-link .link-arrow {
