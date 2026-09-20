@@ -1,0 +1,360 @@
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&display=swap");
+
+/* ══════════════════════════════════════════════════════════════════
+   NOTFOUND — "no record on file"
+   Every class is prefixed nf- on purpose: the other pages define
+   unscoped names like .titlebar and .ascii-box, and all CSS is global
+   once bundled, so nothing here may share a name with them.
+   Same tokens as Nav.css; red is this page's accent, green stays "OK".
+   ══════════════════════════════════════════════════════════════════ */
+
+.nf-page {
+  --bg: #07090a;
+  --panel: #0d1110;
+  --line: #24302c;
+  --line-soft: #182420;
+  --fg: #cdd8d2;
+  --fg-mid: #8a9a93;
+  --fg-dim: #6f7f78;
+  --accent: #ff5a4e;
+  --accent-glow: rgba(255, 90, 78, 0.22);
+  --ok: #3ddc84;
+
+  position: relative;
+  min-height: calc(100vh - 3.2rem);
+  min-height: calc(100dvh - 3.2rem);
+  background: var(--bg);
+  color: var(--fg);
+  font-family: "IBM Plex Mono", monospace;
+  line-height: 1.6;
+  padding: clamp(2rem, 7vh, 4.5rem) 1.25rem 5rem;
+  overflow: hidden;
+}
+
+.nf-page *,
+.nf-page *::before,
+.nf-page *::after {
+  box-sizing: border-box;
+}
+
+/* faint red wash + scanlines, same texture family as the other pages */
+.nf-page::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse 55% 45% at 28% 30%, rgba(255, 90, 78, 0.07), transparent 70%);
+}
+
+.nf-noise {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.035;
+  background-image: repeating-linear-gradient(180deg, var(--fg) 0, var(--fg) 1px, transparent 1px, transparent 3px);
+}
+
+.nf-page :focus-visible {
+  outline: 1px dashed var(--accent);
+  outline-offset: 3px;
+}
+
+.nf-wrap {
+  position: relative;
+  z-index: 1;
+  max-width: 68rem;
+  margin: 0 auto;
+}
+
+/* ── title bar ──────────────────────────────────────────────────── */
+.nf-titlebar {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.05em;
+  color: var(--fg-dim);
+}
+.nf-titlepath::before {
+  content: "┌─ ";
+  color: var(--line);
+}
+.nf-rule {
+  flex: 1;
+  border-bottom: 1px dashed var(--line);
+  transform: translateY(-1px);
+}
+.nf-flag {
+  color: var(--accent);
+}
+
+/* ── layout ─────────────────────────────────────────────────────── */
+.nf-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 21rem) minmax(0, 1fr);
+  align-items: start;
+  gap: clamp(2rem, 6vw, 5rem);
+  margin-top: 2.5rem;
+}
+@media (max-width: 52rem) {
+  .nf-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .nf-copy {
+    order: -1;
+  }
+  .nf-card {
+    max-width: 24rem;
+  }
+}
+
+/* ── case file card ─────────────────────────────────────────────── */
+.nf-card {
+  position: relative;
+  padding: 1.2rem 1.3rem 0.4rem;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  animation: nf-thud 0.22s ease-out 0.95s both;
+}
+@keyframes nf-thud {
+  0% { transform: translate(0, 0); }
+  25% { transform: translate(-3px, 2px); }
+  50% { transform: translate(2px, -2px); }
+  75% { transform: translate(-1px, 1px); }
+  100% { transform: translate(0, 0); }
+}
+
+.nf-corner {
+  position: absolute;
+  z-index: 2;
+  width: 1em;
+  height: 1em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  line-height: 1;
+  color: var(--line);
+  background: var(--bg);
+  pointer-events: none;
+}
+.nf-corner.tl { top: 0; left: 0; transform: translate(-50%, -50%); }
+.nf-corner.tr { top: 0; right: 0; transform: translate(50%, -50%); }
+.nf-corner.bl { bottom: 0; left: 0; transform: translate(-50%, 50%); }
+.nf-corner.br { bottom: 0; right: 0; transform: translate(50%, 50%); }
+
+.nf-card-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 0.8rem;
+  border-bottom: 1px dashed var(--line);
+  font-size: 0.62rem;
+  letter-spacing: 0.14em;
+  color: var(--fg-dim);
+}
+
+.nf-rows {
+  display: grid;
+  gap: 0.8rem;
+  margin: 1.1rem 0 0;
+}
+.nf-rows > div {
+  display: grid;
+  grid-template-columns: 5.6rem minmax(0, 1fr);
+  gap: 0.8rem;
+  align-items: baseline;
+  font-size: 0.78rem;
+}
+.nf-rows dt {
+  font-size: 0.62rem;
+  letter-spacing: 0.1em;
+  color: var(--fg-dim);
+}
+.nf-rows dd {
+  margin: 0;
+  color: var(--fg);
+  overflow-wrap: anywhere;
+}
+.nf-req {
+  color: var(--accent);
+}
+
+/* redaction bar, same idea as the site's redacted text */
+.nf-bar {
+  display: inline-block;
+  width: var(--w, 8ch);
+  max-width: 100%;
+  height: 0.85em;
+  background: var(--fg-dim);
+  vertical-align: -0.08em;
+}
+
+.nf-stamp-zone {
+  position: relative;
+  height: 6rem;
+}
+.nf-stamp {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: inline-block;
+  padding: 0.3rem 0.85rem;
+  border: 2px solid var(--accent);
+  box-shadow: inset 0 0 0 2px var(--panel), inset 0 0 0 3px var(--accent);
+  color: var(--accent);
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  white-space: nowrap;
+  transform: translate(-50%, -50%) rotate(-7deg);
+  animation: nf-stamp-in 0.32s cubic-bezier(0.2, 1.7, 0.4, 1) 0.9s both;
+}
+@keyframes nf-stamp-in {
+  0% { opacity: 0; transform: translate(-50%, -50%) rotate(-7deg) scale(2.6); }
+  60% { opacity: 1; }
+  100% { opacity: 1; transform: translate(-50%, -50%) rotate(-7deg) scale(1); }
+}
+
+/* ── copy column ────────────────────────────────────────────────── */
+.nf-code {
+  margin: 0;
+  min-height: 0.95em;
+  font-size: clamp(4.5rem, 15vw, 9rem);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  line-height: 0.95;
+  color: var(--accent);
+  text-shadow: 0 0 40px var(--accent-glow);
+}
+.nf-title {
+  margin: 0.7rem 0 0;
+  font-size: clamp(1.1rem, 2.4vw, 1.5rem);
+  font-weight: 600;
+}
+.nf-text {
+  margin: 0.7rem 0 0;
+  max-width: 32rem;
+  font-size: 0.85rem;
+  line-height: 1.75;
+  color: var(--fg-mid);
+}
+
+.nf-term {
+  margin: 1.6rem 0 0;
+  font-size: 0.78rem;
+  line-height: 1.9;
+}
+.nf-line {
+  display: flex;
+  gap: 1rem;
+  margin: 0;
+  opacity: 0;
+  animation: nf-line-on 0.01s steps(1) forwards;
+  animation-delay: calc(0.4s + var(--i) * 0.45s);
+}
+@keyframes nf-line-on {
+  to { opacity: 1; }
+}
+.nf-key {
+  flex: 0 0 5.5rem;
+  padding-top: 0.08rem;
+  font-size: 0.66rem;
+  letter-spacing: 0.08em;
+  color: var(--fg-dim);
+}
+.nf-val {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  color: var(--fg);
+}
+.nf-val--bad {
+  color: var(--accent);
+}
+
+/* ── suggestions ────────────────────────────────────────────────── */
+.nf-suggest {
+  margin: 1.8rem 0 0;
+  max-width: 34rem;
+}
+.nf-suggest-title {
+  margin: 0 0 0.6rem;
+  font-size: 0.62rem;
+  letter-spacing: 0.14em;
+  color: var(--fg-dim);
+}
+.nf-suggest-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px dashed var(--line);
+}
+.nf-suggest-list li {
+  border-bottom: 1px dashed var(--line);
+}
+.nf-suggest-list a {
+  display: flex;
+  gap: 1rem;
+  padding: 0.65rem 0.2rem;
+  text-decoration: none;
+  font-size: 0.8rem;
+  transition: padding-left 0.2s ease;
+}
+.nf-suggest-list b {
+  flex: 0 0 2.5rem;
+  padding-top: 0.12rem;
+  font-size: 0.66rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  color: var(--ok);
+}
+.nf-suggest-list span {
+  min-width: 0;
+  color: var(--fg-mid);
+  transition: color 0.15s ease;
+}
+.nf-suggest-list a:hover {
+  padding-left: 0.6rem;
+}
+.nf-suggest-list a:hover span {
+  color: var(--fg);
+}
+
+/* ── actions ────────────────────────────────────────────────────── */
+.nf-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  margin-top: 2rem;
+}
+.nf-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.5rem 0.9rem;
+  border: 1px solid var(--line);
+  color: var(--fg-mid);
+  font-family: inherit;
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
+  text-decoration: none;
+  transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+}
+.nf-btn::before { content: "[ "; white-space: pre; }
+.nf-btn::after { content: " ]"; white-space: pre; }
+.nf-btn--solid {
+  background: var(--ok);
+  border-color: var(--ok);
+  color: var(--bg);
+}
+.nf-btn--solid:hover {
+  background: #6ff0a8;
+  border-color: #6ff0a8;
+}
+
+/* ── motion preferences ─────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .nf-card { animation: none; }
+  .nf-stamp { animation: none; }
+  .nf-line { opacity: 1; animation: none; }
+}
