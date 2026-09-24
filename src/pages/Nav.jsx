@@ -24,6 +24,14 @@ export const BLOG_LINK = {
   label: "BLOG",
 };
 
+// The podcast (Dispatches) is likewise its own site on its own subdomain, so
+// it follows the same pattern as the blog: a plain <a>, outside the box, in
+// its own colour (see --pod in Nav.css).
+export const PODCAST_LINK = {
+  href: "https://podcast.manchesterintelligencesociety.com",
+  label: "PODCAST",
+};
+
 export default function Nav() {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -84,6 +92,16 @@ export default function Nav() {
             <span className="link-code" aria-hidden="true">↗</span>
             <span className="link-label">{BLOG_LINK.label}</span>
           </a>
+
+          <a
+            className="site-nav-link site-nav-link--external site-nav-link--podcast"
+            href={PODCAST_LINK.href}
+            title="Reports, briefings and field recordings — opens the Dispatches podcast"
+            onClick={() => playDossierOpen()}
+          >
+            <span className="link-code" aria-hidden="true">↗</span>
+            <span className="link-label">{PODCAST_LINK.label}</span>
+          </a>
         </nav>
 
         <div className="site-nav-status" aria-hidden="true">
@@ -127,6 +145,17 @@ export default function Nav() {
             >
               <span className="link-code" aria-hidden="true">↗</span>
               <span className="link-label">{BLOG_LINK.label}</span>
+              <span className="link-arrow">&gt;</span>
+            </a>
+          </li>
+          <li className="drawer-external">
+            <a
+              className="drawer-link drawer-link--external drawer-link--podcast"
+              href={PODCAST_LINK.href}
+              onClick={() => playDossierOpen()}
+            >
+              <span className="link-code" aria-hidden="true">↗</span>
+              <span className="link-label">{PODCAST_LINK.label}</span>
               <span className="link-arrow">&gt;</span>
             </a>
           </li>

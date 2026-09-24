@@ -16,6 +16,8 @@
   --flag: #ff5a4e;
   --blog: #ff4fb0; /* the blog's own accent, so it reads as a different site */
   --blog-dim: #5c1f47;
+  --pod: #39d2ff; /* the podcast's own accent (signal cyan, as on its site) */
+  --pod-dim: #123a45;
 
   position: sticky;
   top: 0;
@@ -184,6 +186,19 @@
   background: var(--blog);
 }
 
+/* The podcast reuses the blog's external-link styling, recoloured: the
+   external rules read var(--blog), so re-pointing it on this element is
+   enough. The hover wash is the one hard-coded colour, so it's set here. */
+.site-nav-link--podcast,
+.drawer-link--podcast {
+  --blog: var(--pod);
+  --blog-dim: var(--pod-dim);
+}
+
+.site-nav-link--podcast:hover {
+  background: rgba(57, 210, 255, 0.08);
+}
+
 /* ── Status readout ─────────────────────────────────────────────── */
 .site-nav-status {
   display: flex;
@@ -232,7 +247,7 @@
 }
 
 .site-nav-drawer.is-open {
-  max-height: 20rem;
+  max-height: 26rem; /* five pages plus two external links */
   border-top-color: var(--line-soft);
 }
 
@@ -306,7 +321,20 @@
   transform: translateX(0);
 }
 
-@media (max-width: 52rem) {
+/* Seven links is a lot for one bar: shed the least useful things first. */
+@media (max-width: 72rem) {
+  .site-nav-status {
+    display: none;
+  }
+}
+
+@media (max-width: 66rem) {
+  .site-nav-group .link-code {
+    display: none;
+  }
+}
+
+@media (max-width: 56rem) {
   .site-nav-links,
   .site-nav-status {
     display: none;

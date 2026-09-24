@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo } from "react";
 import { Link, useLocation } from "react-router-dom";
-import Nav, { SITE_LINKS, BLOG_LINK } from "./Nav";
+import Nav, { SITE_LINKS, BLOG_LINK, PODCAST_LINK } from "./Nav";
 import DecryptText from "./DecryptText";
 import { useEvidenceSFX } from "./useEvidenceSFX";
 import "./NotFound.css";
@@ -30,6 +30,13 @@ const CANDIDATES = [
     label: BLOG_LINK.label,
     code: "↗",
     words: ["dispatches", "blog", "news", "posts", "articles", "field notes"],
+  },
+  {
+    key: "podcast",
+    href: PODCAST_LINK.href,
+    label: PODCAST_LINK.label,
+    code: "↗",
+    words: ["podcast", "episodes", "episode", "audio", "listen", "recordings"],
   },
 ];
 
