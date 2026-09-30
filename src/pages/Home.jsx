@@ -34,8 +34,8 @@ const STATS = [
   { code: "01", label: "SOCIETY FOUNDED", value: "2025" },
   { code: "02", label: "ACTIVE MEMBERS", value: "70+" },
   { code: "03", label: "EVENTS DELIVERED (25/26)", value: "13" },
-  { code: "04", label: "INSTAGRAM FOLLOWERS", value: "260+" },
-  { code: "05", label: "LINKEDIN FOLLOWERS", value: "200+" },
+  { code: "04", label: "INSTAGRAM FOLLOWERS", value: "350+" },
+  { code: "05", label: "LINKEDIN FOLLOWERS", value: "300+" },
   { code: "06", label: "ACADEMIC DISCIPLINES", value: "8+" },
 ];
 
