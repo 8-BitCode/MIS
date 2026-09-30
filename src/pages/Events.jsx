@@ -12,7 +12,6 @@ const CALENDAR_CONFIG = {
   refreshMinutes: 15,
   monthsBack: 24,
   monthsForward: 12,
-  archiveLimit: 5, // show the last N past events in the After-Action Archive
 };
 
 const CALENDAR_NOT_CONFIGURED =
@@ -332,8 +331,7 @@ export default function Events() {
       ops
         .filter((op) => op.dayKey < todayKey)
         .slice()
-        .reverse()
-        .slice(0, CALENDAR_CONFIG.archiveLimit),
+        .reverse(),
     [ops, todayKey]
   );
 
