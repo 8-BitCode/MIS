@@ -173,7 +173,7 @@ const CHANNELS = [
     label: "JOIN M.I.S.",
     tag: "MEMBERSHIP — OPEN NOW",
     desc: "Not on the books yet? Society membership runs through the SU shop — sign up to get access to every event on the calendar.",
-    display: "manchesterstudentsunion.com/shop",
+    display: "https://manchesterstudentsunion.com/shop?activity_id=1132",
     href: "https://manchesterstudentsunion.com/shop?activity_id=1132",
     external: true,
     featured: true,
