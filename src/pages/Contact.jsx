@@ -1010,14 +1010,15 @@ export default function Contact() {
                           <div className="readout-value">{active.display}</div>
                           <div className="readout-actions">
                             <button
-                              className="readout-btn"
+                              className="readout-btn readout-btn--copy"
                               onClick={() => handleCopy(active.copyValue || active.display)}
                             >
                               {copied ? "COPIED!" : "COPY_DATA"}
                             </button>
 
                             <button
-                              className="readout-btn readout-btn--ghost"
+                              className="readout-btn readout-btn--initiate"
+                              data-priority={active.priority ? "true" : "false"}
                               onClick={() => triggerUplinkSequence(active)}
                             >
                               INITIATE_LINK
@@ -1067,13 +1068,14 @@ export default function Contact() {
                               <div className="readout-value">{c.display}</div>
                               <div className="readout-actions">
                                 <button
-                                  className="readout-btn"
+                                  className="readout-btn readout-btn--copy"
                                   onClick={() => handleCopy(c.copyValue || c.display)}
                                 >
                                   {copied && activeId === c.id ? "COPIED!" : "COPY_DATA"}
                                 </button>
                                 <button
-                                  className="readout-btn readout-btn--ghost"
+                                  className="readout-btn readout-btn--initiate"
+                                  data-priority={c.priority ? "true" : "false"}
                                   onClick={() => triggerUplinkSequence(c)}
                                 >
                                   INITIATE_LINK
