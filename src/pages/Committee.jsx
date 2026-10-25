@@ -16,6 +16,13 @@ import Viral1 from "../Assets/Viral1.png"
 import Viral2 from "../Assets/Viral2.png"
 import Viral3 from "../Assets/Viral3.png"
 import Valeria1 from "../Assets/Valeria1.png"
+import Kareena1 from "../Assets/Kareena.jpeg"
+import San1 from "../Assets/San.jpeg"
+import Jhanak1 from "../Assets/Jhanak.jpeg"
+import Lamar1 from "../Assets/lamar.jpeg"
+import Eissa1 from "../Assets/Eissa.jpeg"
+import Eloise1 from "../Assets/Eloise.jpeg"
+import Kashish1 from "../Assets/Kashish.jpeg"
 
 // ── MEMBER DATA ──────────────────────────────────────────────────
 const INITIAL_MEMBERS = [
@@ -28,7 +35,7 @@ const INITIAL_MEMBERS = [
     degree: "Computer Science",
     funFact: "You’re on my watchlist",
     photos: [Amelia1, Amelia2],
-    pos: { top: 22, left: 30 },
+    pos: { top: 14, left: 35 },
     connections: ["member-2", "member-3", "member-4"]
   },
   {
@@ -40,7 +47,7 @@ const INITIAL_MEMBERS = [
     degree: "Computer Science",
     funFact: "I love caffeine",
     photos: [Viral1, Viral2, Viral3],
-    pos: { top: 22, left: 70 },
+    pos: { top: 14, left: 65 },
     connections: ["member-3", "member-5"]
   },
   {
@@ -52,7 +59,7 @@ const INITIAL_MEMBERS = [
     degree: "Computer Science",
     funFact: "I know how to embroider",
     photos: [Valeria1],
-    pos: { top: 52, left: 25 },
+    pos: { top: 36, left: 18 },
     connections: ["member-6"]
   },
   {
@@ -64,7 +71,7 @@ const INITIAL_MEMBERS = [
     degree: "Computer Science",
     funFact: "I can never say no to dessert",
     photos: [Sana1],
-    pos: { top: 52, left: 50 },
+    pos: { top: 36, left: 39 },
     connections: ["member-5", "member-6"]
   },
   {
@@ -76,7 +83,7 @@ const INITIAL_MEMBERS = [
     degree: "Computer Science",
     funFact: "I’ve lived in 4 different continents",
     photos: [Pau1, Pau2, Pau3, Pau4, Pau5],
-    pos: { top: 52, left: 75 },
+    pos: { top: 36, left: 61 },
     connections: ["member-6"]
   },
   {
@@ -90,10 +97,94 @@ const INITIAL_MEMBERS = [
     photos: [Akram1, Akram2],
     pos: { top: 82, left: 50 },
     connections: []
+  },
+  {
+    id: "member-7",
+    file: "07",
+    role: "Graphics Lead",
+    dept: "MEDIA",
+    name: "Kareena",
+    degree: "Management (Accounting & Finance)",
+    funFact: "I wish I was a laugh",
+    photos: [Kareena1],
+    pos: { top: 36, left: 82 },
+    connections: ["member-5"]
+  },
+  {
+    id: "member-8",
+    file: "08",
+    role: "Event Lead",
+    dept: "EVENTS",
+    name: "San",
+    degree: "LLB Law",
+    funFact: "I can memorise maps of any city after one visit!",
+    photos: [San1],
+    pos: { top: 59, left: 18 },
+    connections: ["member-3", "member-9"]
+  },
+  {
+    id: "member-9",
+    file: "09",
+    role: "Event Lead",
+    dept: "EVENTS",
+    name: "Jhanak",
+    degree: "Politics and International Relations",
+    funFact: "I am a state level pistol shooter",
+    photos: [Jhanak1],
+    pos: { top: 59, left: 39 },
+    connections: ["member-4"]
+  },
+  {
+    id: "member-10",
+    file: "10",
+    role: "Intelligence Analyst",
+    dept: "INTELLIGENCE",
+    name: "Lamar",
+    degree: "Civil Engineering",
+    funFact: "I can solve a Rubik’s cube in under a minute",
+    photos: [Lamar1],
+    pos: { top: 59, left: 61 },
+    connections: ["member-11"]
+  },
+  {
+    id: "member-11",
+    file: "11",
+    role: "Intelligence Analyst",
+    dept: "INTELLIGENCE",
+    name: "Eissa",
+    degree: "Chemical Engineering",
+    funFact: "I’ve been to 33 countries",
+    photos: [Eissa1],
+    pos: { top: 59, left: 82 },
+    connections: ["member-6"]
+  },
+  {
+    id: "member-12",
+    file: "12",
+    role: "Socials & Marketing",
+    dept: "MEDIA",
+    name: "Eloise",
+    degree: "Criminology",
+    funFact: "I’m a part-time horse mum",
+    photos: [Eloise1],
+    pos: { top: 82, left: 28 },
+    connections: ["member-6"]
+  },
+  {
+    id: "member-13",
+    file: "13",
+    role: "Socials & Marketing",
+    dept: "MEDIA",
+    name: "Kashish",
+    degree: "Peace & Conflict Studies",
+    funFact: "I can’t resist a good conspiracy theory",
+    photos: [Kashish1],
+    pos: { top: 82, left: 72 },
+    connections: ["member-6"]
   }
 ];
 
-const DEPARTMENTS = ["ALL UNITS", "EXECUTIVE", "OPERATIONS", "ADVOCACY", "DEVELOPMENT"];
+const DEPARTMENTS = ["ALL UNITS", "EXECUTIVE", "OPERATIONS", "ADVOCACY", "DEVELOPMENT", "EVENTS", "INTELLIGENCE", "MEDIA"];
 
 function matchesDept(member, filter) {
   if (filter === "ALL UNITS") return true;
@@ -109,6 +200,60 @@ const CLAMP_LEFT_MAX = 94;
 const CLAMP_TOP_MIN = 8;
 const CLAMP_TOP_MAX = 92;
 const JOLT_TRIGGER_MARGIN = 4;
+
+// ── Responsive board layout ──────────────────────────────────────
+// Same query the CSS uses for its compact/mobile rules. On compact
+// screens the pins are re-laid out as a roomier 3-column grid.
+const COMPACT_QUERY = "(max-width: 48rem), (orientation: portrait)";
+
+// Scattered "evidence board" placements (these override the `pos`
+// values in INITIAL_MEMBERS). Hand-placed so nothing overlaps.
+const DESKTOP_POS = {
+  "member-1":  { top: 16, left: 22 }, // Amelia
+  "member-2":  { top: 12, left: 58 }, // Viral
+  "member-3":  { top: 38, left: 9 },  // Valeria
+  "member-4":  { top: 30, left: 38 }, // Sana
+  "member-5":  { top: 22, left: 82 }, // Pau
+  "member-7":  { top: 52, left: 82 }, // Kareena
+  "member-8":  { top: 60, left: 24 }, // San
+  "member-9":  { top: 40, left: 58 }, // Jhanak
+  "member-10": { top: 60, left: 70 }, // Lamar
+  "member-11": { top: 78, left: 90 }, // Eissa
+  "member-12": { top: 87, left: 18 }, // Eloise
+  "member-13": { top: 87, left: 74 }, // Kashish
+  "member-6":  { top: 82, left: 50 }  // Akram
+};
+
+const COMPACT_POS = {
+  "member-1":  { top: 10, left: 18 }, // Amelia
+  "member-2":  { top: 8,  left: 62 }, // Viral
+  "member-3":  { top: 22, left: 40 }, // Valeria
+  "member-4":  { top: 24, left: 84 }, // Sana
+  "member-5":  { top: 34, left: 14 }, // Pau
+  "member-7":  { top: 42, left: 58 }, // Kareena
+  "member-8":  { top: 44, left: 86 }, // San
+  "member-9":  { top: 56, left: 30 }, // Jhanak
+  "member-10": { top: 64, left: 70 }, // Lamar
+  "member-11": { top: 72, left: 12 }, // Eissa
+  "member-12": { top: 76, left: 52 }, // Eloise
+  "member-13": { top: 84, left: 86 }, // Kashish
+  "member-6":  { top: 87, left: 34 }  // Akram
+};
+
+// Slight tilt per card, in degrees, so the pins look hand-pinned.
+const TILT = {
+  "member-1": -4, "member-2": 3, "member-3": 5, "member-4": -2, "member-5": 4,
+  "member-6": -3, "member-7": -5, "member-8": 2, "member-9": -4, "member-10": 5,
+  "member-11": -2, "member-12": 3, "member-13": -5
+};
+
+const getCompact = () =>
+  typeof window !== "undefined" && window.matchMedia(COMPACT_QUERY).matches;
+
+const homePos = (id, compact) => (compact ? COMPACT_POS : DESKTOP_POS)[id];
+
+const layoutMembers = (list, compact) =>
+  list.map((m) => ({ ...m, pos: { ...homePos(m.id, compact) } }));
 
 //ignore scrapped code
 const COMMITTEE_CHAPTER_PARAGRAPHS = [
@@ -207,7 +352,8 @@ export default function Committee() {
   const clearedStages = useClearance();
   const committeeSolved = clearedStages.has("committee");
 
-  const [members, setMembers] = useState(INITIAL_MEMBERS);
+  const compactRef = useRef(getCompact());
+  const [members, setMembers] = useState(() => layoutMembers(INITIAL_MEMBERS, compactRef.current));
   const [hatchOpen, setHatchOpen] = useState(false);
   const [revealOpen, setRevealOpen] = useState(false);
   const [revealClosing, setRevealClosing] = useState(false);
@@ -247,6 +393,18 @@ export default function Committee() {
       document.body.style.overflow = prevOverflow;
       document.body.style.height = prevHeight;
     };
+  }, []);
+
+  // Re-lay out the board if the screen crosses the mobile/desktop
+  // breakpoint (rotating a phone, resizing a window).
+  useEffect(() => {
+    const mq = window.matchMedia(COMPACT_QUERY);
+    const onChange = (e) => {
+      compactRef.current = e.matches;
+      setMembers((prev) => layoutMembers(prev, e.matches));
+    };
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
   }, []);
 
   const activeMember = useMemo(() => members.find((m) => m.id === activeId), [members, activeId]);
@@ -408,7 +566,7 @@ export default function Committee() {
         markStage("committee");
         setRevealOpen(true);
         setMembers((prev) =>
-          prev.map((m) => (m.id === "member-6" ? { ...m, pos: { top: 82, left: 50 } } : m))
+          prev.map((m) => (m.id === "member-6" ? { ...m, pos: { ...homePos("member-6", compactRef.current) } } : m))
         );
       } else if (current.joltedThisDrag) {
         const snap = lastValidPosRef.current;
@@ -593,7 +751,7 @@ export default function Committee() {
                     onMouseEnter={() => setHoveredId(m.id)}
                     onMouseLeave={() => setHoveredId(null)}
                   >
-                    <div className="pin-card ascii-box" role="button" tabIndex={0} aria-label={`Open personnel file for ${m.role}`}>
+                    <div className="pin-card ascii-box" style={{ "--tilt": `${TILT[m.id] || 0}deg` }} role="button" tabIndex={0} aria-label={`Open personnel file for ${m.role}`}>
                       <AsciiCorners />
                       <div className="pin-photo-frame">
                         <span className="pin-id">N-{m.file}</span>

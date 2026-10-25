@@ -366,6 +366,8 @@ body:has(.roster-page) {
   flex-direction: column;
   align-items: stretch;
   width: clamp(4.5rem, 7.5vw, 7rem);
+  transform: rotate(var(--tilt, 0deg));
+  transition: transform 0.15s ease;
   background: var(--panel);
   border: none;
   padding: 0;
@@ -380,6 +382,7 @@ body:has(.roster-page) {
 .pin-card:hover,
 .pin-card:focus-visible {
   outline: none;
+  transform: rotate(0deg) scale(1.08);
 }
 
 .pin-card:hover .ascii-corner,
@@ -1072,6 +1075,51 @@ body:has(.roster-page) {
   .alien-mark,
   .hatch-gap {
     transition: none !important;
+  }
+}
+
+/* ── Compact / mobile board ─────────────────────────────────────
+   Pins are laid out in a 3-column grid by Committee.jsx (COMPACT_POS);
+   here we just make the chrome smaller so nothing overlaps. */
+@media (max-width: 48rem), (orientation: portrait) {
+  /* filters wrap onto a couple of tight lines so every button stays on screen */
+  .roster-header {
+    min-width: 0;
+    max-width: 100%;
+  }
+  .filter-row {
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    max-width: 100%;
+  }
+  .filter-btn {
+    flex: 0 0 auto;
+    white-space: nowrap;
+    font-size: 0.55rem;
+    letter-spacing: 0.02em;
+    padding: 0.2rem 0.3rem;
+  }
+  .filter-btn::before { content: "["; }
+  .filter-btn::after { content: "]"; }
+
+  /* the help note covers the top-left pin on a small board */
+  .sys-note { display: none; }
+
+  .pin-card {
+    width: clamp(2.9rem, 14.5vw, 3.7rem);
+  }
+  .pin-id {
+    font-size: 0.4rem;
+  }
+  .pin-hint { display: none; }
+
+  .ascii-corner {
+    font-size: 0.65rem;
+  }
+
+  /* less zoom so the opened card's neighbours aren't blown off-screen */
+  .board.is-zoomed {
+    transform: scale(1.8);
   }
 }
 
