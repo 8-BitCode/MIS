@@ -36,6 +36,15 @@ const SPONSOR_NODES = [
     tier: "OPEN SPONSORSHIP",
     reach: "CUSTOM EVENT ACCESS · BRAND VISIBILITY · TALENT PIPELINE",
     tierId: "tier-custom"
+  },
+  {
+    id: 2,
+    nodeIndex: 10,
+    name: "RISCS",
+    status: "PARTNER CONFIRMED",
+    tier: "HEADLINE SPONSOR · CUSTOM PACKAGE",
+    reach: "SOCIAL MEDIA SHOUTOUTS · LOGO ON PROMO MATERIAL · EVENT SHOUTOUTS",
+    tierId: null
   }
 ];
 
